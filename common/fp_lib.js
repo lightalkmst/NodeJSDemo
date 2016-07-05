@@ -68,6 +68,16 @@ var F = {
   //             //
   /////////////////
 
+	// (unit -> 'a) -> 'a
+	try: f => {
+		try {
+			return f ()
+		}
+		catch (_) {
+			return undefined
+		}
+	},
+
   // (a' -> 'b -> 'c) -> 'b -> 'a -> 'c
   swap: f => x => y => f (y) (x),
 
@@ -83,7 +93,7 @@ var F = {
   // use that and type it properly as
   // ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
   // but without an infix operator, it'd be verbose non-variadic
-  // comp: (...fs) => x => L.fold (a => h => h (a)) (x) (fs),
+  // comp: (...fs) => F.swap (L.fold (F['|>'])) (fs),
 
   // alternatively this operator overloading hack that i lifted from:
   // http://scott.sauyet.com/Javascript/Talk/Compose/2013-05-22/#slide-33
@@ -96,7 +106,8 @@ var F = {
     }
     return _ => {
       Function.prototype.valueOf = valueOf
-      return F.comp.apply (undefined, fs)
+			return F.swap (L.fold (F['|>'])) (fs)
+      // return F.comp.apply (undefined, fs)
     }
   },
 
@@ -110,7 +121,8 @@ var F = {
     }
     return _ => {
       Function.prototype.valueOf = valueOf
-      return F.comp.apply (undefined, fs) (x)
+			return F.swap (L.fold (F['|>'])) (fs) (x)
+      // return F.comp.apply (undefined, fs) (x)
     }
   },
 
@@ -171,7 +183,7 @@ var L = {
   rev: l => L.clone (l).reverse (),
 
   // ('a -> unit) -> 'a list -> unit
-  iter: f => l => l.forEach (f),
+  iter: f => L.iteri (_ => f),
 
   // (int -> 'a -> unit) -> 'a list -> unit
   iteri: f => l => {for (var i in l) f (i) (l[i])},
