@@ -107,7 +107,6 @@ var F = {
     return _ => {
       Function.prototype.valueOf = valueOf
 			return F.swap (L.fold (F['|>'])) (fs)
-      // return F.comp.apply (undefined, fs)
     }
   },
 
@@ -122,7 +121,6 @@ var F = {
     return _ => {
       Function.prototype.valueOf = valueOf
 			return F.swap (L.fold (F['|>'])) (fs) (x)
-      // return F.comp.apply (undefined, fs) (x)
     }
   },
 
