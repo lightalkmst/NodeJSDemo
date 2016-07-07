@@ -69,12 +69,12 @@ var F = {
   /////////////////
 
 	// (unit -> 'a) -> 'a
-	try: f => {
+	try: (f, g) => {
 		try {
 			return f ()
 		}
 		catch (_) {
-			return undefined
+			return (g || (_ => undefined)) ()
 		}
 	},
 

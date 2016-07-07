@@ -4,8 +4,12 @@ var fs = require ('fs')
 var express = require ('express')
 var app = express ()
 
+var request = require ('request')
+
 // my library
 eval (fs.readFileSync ('common/fp_lib.js', 'utf8'))
+
+var log = x => console.log ('main: ' + x)
 
 ////////////
 //        //
@@ -36,31 +40,34 @@ var cfg =
       })
     )
     return ans
-  })
+  }, _ => ({}))
 
 /////////////
 //         //
 // ROUTING //
 //         //
 /////////////
-var get_file = x =>
-  app.get ('/' + x, (req, resp) => {
-    F.try (_ => {
-      resp.writeHead (200, {'Content-Type': 'text/plain'})
-      resp.write (fs.readFileSync ('frontend/' + x.split ('.') [1] + '/' + x))
-      resp.end ()
-    })
-  })
-
-var rest = r => x => f => {
+var rest = r => x => (f, g) => {
   app [r] ('/' + x, (req, resp) => {
     F.try (_ => {
       resp.writeHead (200, {'Content-Type': 'text/plain'})
       resp.write (f (req, resp))
       resp.end ()
-    })
+    }, g || (_ => {
+      resp.writeHead (500, {'Content-Type': 'text/plain'})
+      resp.write (undefined)
+      resp.end ()
+    }))
   })
 }
+
+var get_file = x => rest ('get') (x) (_ =>
+  F.try (_ =>
+    fs.readFileSync ('common/' + x)
+  , _ =>
+    fs.readFileSync ('frontend/' + x.split ('.') [1] + '/' + x)
+  )
+)
 
 var get_rest = rest ('get')
 
@@ -75,5 +82,21 @@ var del_rest = rest ('delete')
 // HANDLERS //
 //          //
 //////////////
+var host_file = file => src =>
+  ! F.try (_ => fs.lstatSync (file).isFile (), _ => false)
+  ? request (src).pipe (fs.createWriteStream (file))
+  : undefined
+
+host_file ('frontend/js/angular.js')
+  ('https://ajax.googleapis.com/ajax/libs/angularjs/' + cfg.angular + '/angular.min.js')
+
+get_file ('angular.js')
+
+// get my library
+// figure out where i can host it
+
+get_file ('fp_lib.js')
+
 
 app.listen (8080)
+log ('Server is ready')
