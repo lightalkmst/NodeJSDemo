@@ -25,10 +25,10 @@ var F = {
 
   '===': x => y => x === y,
 
-  '!=': x => y => x == y,
-  '<>': x => y => x == y,
+  '!=': x => y => x != y,
+  '<>': x => y => x != y,
 
-  '!==': x => y => x === y,
+  '!==': x => y => x !== y,
 
   '!': x => ! x,
   '~': x => ! x,
@@ -69,13 +69,17 @@ var F = {
   /////////////////
 
 	// (unit -> 'a) -> 'a
-	try: (f, g) => {
-		try {
-			return f ()
-		}
-		catch (_) {
-			return (g || (_ => undefined)) ()
-		}
+	try: (p, ...fs) => {
+	  var f = fs.shift()
+	  try {
+	    return f ()
+	  }
+	  catch (e) {
+			if (p) {
+				console.log (e)
+			}
+	    return fs[0] ? F.try (p, ...fs) : undefined
+	  }
 	},
 
   // (a' -> 'b -> 'c) -> 'b -> 'a -> 'c
@@ -93,7 +97,7 @@ var F = {
   // use that and type it properly as
   // ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
   // but without an infix operator, it'd be verbose non-variadic
-  // comp: (...fs) => F.swap (L.fold (F['|>'])) (fs),
+  comp: (...fs) => F.swap (L.fold (F['|>'])) (fs),
 
   // alternatively this operator overloading hack that i lifted from:
   // http://scott.sauyet.com/Javascript/Talk/Compose/2013-05-22/#slide-33
