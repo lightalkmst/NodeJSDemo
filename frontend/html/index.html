@@ -1,1 +1,29 @@
-Hello, World!
+<!DOCTYPE html>
+
+<html>
+  <link rel="stylesheet" type="text/css" href="style.css"></link>
+  <head>
+  </head>
+
+  <body>
+  	<!-- dependencies -->
+    <script src="fp_lib.js"></script>
+    <script src="jquery.js"></script>
+    <script src="angular.js"></script>
+    <script src="app.js"></script>
+    <script>
+      $.get ('/js_file_list', data => {
+        F.p (data.split ('\n')) (
+          L.filter (F.id)
+          >> L.filter (h => L.forall (F['<>'] (h)) ([
+            'fp_lib.js',
+            'jquery.js',
+            'angular.js',
+            'app.js',
+          ]))
+          >> L.iter (h => $.get ('/' + h))
+        )
+      })
+    </script>
+  </body>
+</html>

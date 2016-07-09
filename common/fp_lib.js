@@ -69,18 +69,18 @@ var F = {
   /////////////////
 
 	// (unit -> 'a) -> 'a
-	try: (p, ...fs) => {
-	  var f = fs.shift()
-	  try {
-	    return f ()
-	  }
-	  catch (e) {
-			if (p) {
-				console.log (e)
-			}
-	    return fs[0] ? F.try (p, ...fs) : undefined
-	  }
-	},
+  try: (p, ...fs) => {
+    var f = fs.shift()
+    try {
+      return f ()
+    }
+    catch (e) {
+      if (p) {
+        console.log (e)
+      }
+      return fs[0] ? F.try (p, ...fs) : undefined
+    }
+  },
 
   // (a' -> 'b -> 'c) -> 'b -> 'a -> 'c
   swap: f => x => y => f (y) (x),
@@ -97,7 +97,7 @@ var F = {
   // use that and type it properly as
   // ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
   // but without an infix operator, it'd be verbose non-variadic
-  comp: (...fs) => F.swap (L.fold (F['|>'])) (fs),
+  rcomp: (...fs) => F.swap (L.fold (F['|>'])) (fs),
 
   // alternatively this operator overloading hack that i lifted from:
   // http://scott.sauyet.com/Javascript/Talk/Compose/2013-05-22/#slide-33
@@ -110,7 +110,7 @@ var F = {
     }
     return _ => {
       Function.prototype.valueOf = valueOf
-			return F.swap (L.fold (F['|>'])) (fs)
+			return F.rcomp (...fs)
     }
   },
 
@@ -124,7 +124,7 @@ var F = {
     }
     return _ => {
       Function.prototype.valueOf = valueOf
-			return F.swap (L.fold (F['|>'])) (fs) (x)
+			return F.rcomp (...fs) (x)
     }
   },
 
@@ -136,6 +136,9 @@ var F = {
 
   // int -> (unit -> unit) -> unit
   times: x => f => {for (var n = 0; n < x; n++) f ()},
+
+	//
+	after: n => f => (...args) => n != 1 ? (n--, undefined) : f (...args),
 }
 
 var L = {

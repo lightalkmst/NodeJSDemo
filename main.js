@@ -27,20 +27,20 @@ var cfg =
         return [h.slice (0, i), h.slice (i + 1, -1)]
       })
       >> L.map (L.map (h => h.trim ()))
-      >> L.map (h => [h[0].split ('.'), h[1]])
+      >> L.map (h => [h [0].split ('.'), h [1]])
       >> L.iter (h => {
-        var k = h[0].pop ()
+        var k = h [0].pop ()
         var cfg =
           L.fold (a => h =>
             a[h] == undefined
             ? a[h] = {}
             : a[h]
-          ) (ans) (h[0])
-        cfg[k] = eval (h[1])
+          ) (ans) (h [0])
+        cfg[k] = eval (h [1])
       })
     )
     return ans
-  }, _ => ({}))
+  }) || {}
 
 //////////////////
 //              //
@@ -50,7 +50,7 @@ var cfg =
 var dl_file = file => src => request (src).pipe (fs.createWriteStream (file))
 
 dl_file ('frontend/js/angular.js') ('https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js')
-
+dl_file ('frontend/js/jquery.js') ('https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js')
 /////////////
 //         //
 // ROUTING //
@@ -69,53 +69,89 @@ var headers = {
     'Content-Type': 'text/javascript',
     'Expires': new Date ().toUTCString ()
   }),
+  plain: _ => ({
+    'Content-Type': 'text/plain',
+    'Expires': new Date ().toUTCString ()
+  })
 }
 
-var rest = r => x => (f, g) => {
-  app [r] ('/' + x, (req, resp) =>
-    F.try (true, _ => {
-      var r = f (req, resp)
-      resp.writeHead (r[0], headers[r[1]] ())
-      resp.write (r[2])
-      resp.end ()
-    }, _ => {
-      log ('Failed to serve request ' + req.url)
-      resp.writeHead (500, headers.html ())
-      resp.write ('<span style="font-size: 20">500 Internal Server Error</span>')
-      resp.end ()
+var write = resp => (...r) => {
+  resp.writeHead (r [0], headers[r [1]] ())
+  resp.write (r [2])
+  resp.end ()
+}
+
+var rest = m => x => f => app [m] ('/' + x, f)
+
+var get = rest ('get')
+
+var postt = rest ('post')
+
+var put = rest ('put')
+
+var del = rest ('delete')
+
+//////////////
+//          //
+// REST API //
+//          //
+//////////////
+
+get ('js_file_list') ((req, resp) => {
+  var dirs = ['common/', 'frontend/js/']
+  var files = ''
+  var f = F.after (2) (_ => write (resp) (200, 'plain', files))
+  L.iter (h =>
+    fs.readdir (h, (e, data) => {
+      files += L.reduce (F['+']) (L.map (h => h + '\n') (data))
+      f ()
     })
-  )
-}
+  ) (dirs)
+})
 
-var get_rest = rest ('get')
+//
+// New stuff goes here
+// v v v
 
-var post_rest = rest ('post')
 
-var put_rest = rest ('put')
 
-var del_rest = rest ('delete')
+// ^ ^ ^
+// New stuff goes here
+//
 
-//////////////
-//          //
-// HANDLERS //
-//          //
-//////////////
+//////////////////
+//              //
+// FILE SERVING //
+//              //
+//////////////////
 var does_not_exist = (req, resp) => {
   log ('Failed attempt to access nonexistent resource ' + req.url)
-  return [404, 'html', '<span style="font-size: 20">404 Page Does Not Exist</span>']
+  write (resp) (404, 'html', '<span style="font-size: 20">404 Page Does Not Exist</span>')
 }
 
-get_rest ('*.js') ((req, resp) =>
-  F.try (false, _ =>
-    [200, 'js', fs.readFileSync ('common' + req.url)]
-  , _ =>
-    [200, 'js', fs.readFileSync ('frontend/js' + req.url)]
-  , _ =>
-    does_not_exist (req, resp)
+get ('*.js') ((req, resp) =>
+  fs.readFile ('common' + req.url, (e, data) =>
+    !e
+    ? write (resp) (200, 'js', data)
+    : fs.readFile ('frontend/js' + req.url, (e, data) =>
+      !e
+      ? write (resp) (200, 'js', data)
+      : does_not_exist (req, resp)
+    )
   )
 )
 
-get_rest ('*') (does_not_exist)
+L.iter (h =>
+  get ('*.' + h) ((req, resp) =>
+    fs.readFile ('frontend/' + h + req.url, (e, data) =>
+      !e
+      ? write (resp) (200, h, data)
+      : does_not_exist (req, resp)
+    )
+  )
+) (['html', 'css'])
+
+get ('*') (does_not_exist)
 
 app.listen (8080)
 log ('Server is ready')
