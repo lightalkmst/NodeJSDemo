@@ -50,7 +50,18 @@ var cfg =
 var dl_file = file => src => request (src).pipe (fs.createWriteStream (file))
 
 dl_file ('frontend/js/angular.js') ('https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js')
+dl_file ('frontend/js/angular-route.js') ('https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.min.js')
 dl_file ('frontend/js/jquery.js') ('https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js')
+
+//
+// New stuff goes here
+// v v v
+
+
+
+// ^ ^ ^
+// New stuff goes here
+//
 
 /////////////
 //         //
