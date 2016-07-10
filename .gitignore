@@ -1,2 +1,2 @@
 node_modules/**
-frontend/js/angular.js
+frontend/js/*.min.*

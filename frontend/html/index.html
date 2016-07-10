@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html>
+<html ng-app="app">
   <link rel="stylesheet" type="text/css" href="style.css"></link>
   <head>
   </head>
@@ -8,23 +8,34 @@
   <body>
   	<!-- dependencies -->
     <script src="fp_lib.js"></script>
-    <script src="jquery.js"></script>
-    <script src="angular.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="angular.min.js"></script>
+    <script src="angular-route.min.js"></script>
     <script src="app.js"></script>
     <script>
       $.get ('/js_file_list', data => {
         F.p (data.split ('\n')) (
           L.filter (F.id)
+          >> L.filter (h => ! h.includes ('.map'))
           >> L.filter (h => L.forall (F['<>'] (h)) ([
             'fp_lib.js',
-            'jquery.js',
-            'angular.js',
+            'jquery.min.js',
+            'angular.min.js',
+            'angular-route.min.js',
             'app.js',
           ]))
           >> L.iter (h => $.get ('/' + h))
         )
       })
     </script>
+
+    index.html
+    <br />
+    <ul class="nav navbar-nav navbar-right">
+      <li><a href="#">Home</a></li>
+      <li><a href="#/a">About</a></li>
+      <li><a href="#/b">Contact</a></li>
+    </ul>
 
     <div ng-view></div>
   </body>

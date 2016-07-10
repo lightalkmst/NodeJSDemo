@@ -49,9 +49,22 @@ var cfg =
 //////////////////
 var dl_file = file => src => request (src).pipe (fs.createWriteStream (file))
 
-dl_file ('frontend/js/angular.js') ('https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js')
-dl_file ('frontend/js/angular-route.js') ('https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.min.js')
-dl_file ('frontend/js/jquery.js') ('https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js')
+L.iter (h => dl_file (h [0]) (h [1])) ([[
+  'frontend/js/angular.min.js',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js'
+], [
+  'frontend/js.map/angular.min.js.map',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js.map'
+], [
+  'frontend/js/angular-route.min.js',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.min.js'
+], [
+  'frontend/js.map/angular-route.min.js.map',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.min.js.map'
+], [
+  'frontend/js/jquery.min.js',
+   'https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js'
+]])
 
 //
 // New stuff goes here
@@ -81,10 +94,14 @@ var headers = {
     'Content-Type': 'text/javascript',
     'Expires': new Date ().toUTCString ()
   }),
+  'js.map': _ => ({
+    'Content-Type': 'text/plain',
+    'Expires': new Date ().toUTCString ()
+  }),
   plain: _ => ({
     'Content-Type': 'text/plain',
     'Expires': new Date ().toUTCString ()
-  })
+  }),
 }
 
 var write = resp => (...r) => {
@@ -97,7 +114,7 @@ var rest = m => x => f => app [m] ('/' + x, f)
 
 var get = rest ('get')
 
-var postt = rest ('post')
+var post = rest ('post')
 
 var put = rest ('put')
 
@@ -161,7 +178,15 @@ L.iter (h =>
       : does_not_exist (req, resp)
     )
   )
-) (['html', 'css'])
+) (['html', 'css', 'js.map'])
+
+get ('/') ((req, resp) =>
+  fs.readFile ('frontend/html/index.html', (e, data) =>
+    !e
+    ? write (resp) (200, 'html', data)
+    : does_not_exist (req, resp)
+  )
+)
 
 get ('*') (does_not_exist)
 
