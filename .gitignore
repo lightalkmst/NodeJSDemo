@@ -1,2 +1,8 @@
 node_modules/**
+
 frontend/js/*.min.*
+frontend/js/angular*.js
+frontend/js/jquery*.js
+
+frontend/js.map/angular*.js.map
+frontend/js.map/jquery*.js.map

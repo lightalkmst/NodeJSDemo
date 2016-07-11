@@ -8,23 +8,23 @@
   <body>
   	<!-- dependencies -->
     <script src="fp_lib.js"></script>
-    <script src="jquery.min.js"></script>
-    <script src="angular.min.js"></script>
-    <script src="angular-route.min.js"></script>
+    <script src="jquery.js"></script>
+    <script src="angular.js"></script>
+    <script src="angular-route.js"></script>
     <script src="app.js"></script>
+    <script src="a_st_ctrl.js"></script>
     <script>
       $.get ('/js_file_list', data => {
         F.p (data.split ('\n')) (
           L.filter (F.id)
-          >> L.filter (h => ! h.includes ('.map'))
           >> L.filter (h => L.forall (F['<>'] (h)) ([
             'fp_lib.js',
-            'jquery.min.js',
-            'angular.min.js',
-            'angular-route.min.js',
+            'jquery.js',
+            'angular.js',
+            'angular-route.js',
             'app.js',
           ]))
-          >> L.iter (h => $.get ('/' + h))
+          >> L.iter (h => $.get ('/' + h, eval))
         )
       })
     </script>
@@ -33,8 +33,9 @@
     <br />
     <ul class="nav navbar-nav navbar-right">
       <li><a href="#">Home</a></li>
-      <li><a href="#/a">About</a></li>
-      <li><a href="#/b">Contact</a></li>
+      <li><a href="#a">About</a></li>
+      <li><a href="#b">Contact</a></li>
+      <li><a href="#c">c</a></li>
     </ul>
 
     <div ng-view></div>

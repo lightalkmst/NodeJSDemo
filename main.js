@@ -42,6 +42,8 @@ var cfg =
     return ans
   }) || {}
 
+var min = cfg.prod ? '.min' : ''
+
 //////////////////
 //              //
 // DEPENDENCIES //
@@ -49,18 +51,20 @@ var cfg =
 //////////////////
 var dl_file = file => src => request (src).pipe (fs.createWriteStream (file))
 
-L.iter (h => dl_file (h [0]) (h [1])) ([[
-  'frontend/js/angular.min.js',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js'
+L.iter (h =>
+  dl_file (cfg.prod ? h [0] : h [0].replace (/\.min\./, '.')) (cfg.prod ? h [1] : h [1].replace (/\.min\./, '.')
+)) ([[
+  'frontend/js/angular.js',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.js'
 ], [
-  'frontend/js.map/angular.min.js.map',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.min.js.map'
+  'frontend/js.map/angular.js.map',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.js.map'
 ], [
-  'frontend/js/angular-route.min.js',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.min.js'
+  'frontend/js/angular-route.js',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.js'
 ], [
-  'frontend/js.map/angular-route.min.js.map',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.min.js.map'
+  'frontend/js.map/angular-route.js.map',
+  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.js.map'
 ], [
   'frontend/js/jquery.min.js',
    'https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js'

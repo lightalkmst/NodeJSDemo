@@ -4,7 +4,6 @@ angular.module ('app', [
   .config ([
     '$routeProvider',
     ($routeProvider) => {
-      console.log ('routing')
       $.get ('/js_file_list', data => {
         F.p (data.split ('\n')) (
           L.filter (F.id)
@@ -19,6 +18,4 @@ angular.module ('app', [
         )
       })
     }
-])
-
-console.log (angular)
+  ])
