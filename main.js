@@ -42,8 +42,6 @@ var cfg =
     return ans
   }) || {}
 
-var min = cfg.prod ? '.min' : ''
-
 //////////////////
 //              //
 // DEPENDENCIES //
@@ -51,9 +49,9 @@ var min = cfg.prod ? '.min' : ''
 //////////////////
 var dl_file = file => src => request (src).pipe (fs.createWriteStream (file))
 
-L.iter (h =>
-  dl_file (cfg.prod ? h [0] : h [0].replace (/\.min\./, '.')) (cfg.prod ? h [1] : h [1].replace (/\.min\./, '.')
-)) ([[
+var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
+
+F.p ([[
   'frontend/js/angular.js',
   'https://code.angularjs.org/' + cfg.ng_vers + '/angular.js'
 ], [
@@ -68,7 +66,10 @@ L.iter (h =>
 ], [
   'frontend/js/jquery.min.js',
    'https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js'
-]])
+]]) (
+  L.map (L.map (min_for_prod))
+  >> L.iter (h => dl_file (h [0]) (h [1]))
+)
 
 //
 // New stuff goes here
@@ -185,7 +186,7 @@ L.iter (h =>
 ) (['html', 'css', 'js.map'])
 
 get ('/') ((req, resp) =>
-  fs.readFile ('frontend/html/index.html', (e, data) =>
+  fs.readFile ('frontend/html/index' + min + '.html', (e, data) =>
     !e
     ? write (resp) (200, 'html', data)
     : does_not_exist (req, resp)
