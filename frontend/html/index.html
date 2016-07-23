@@ -1,34 +1,33 @@
 <!DOCTYPE html>
-
-<html ng-app="app">
-  <link rel="stylesheet" type="text/css" href="style.css"></link>
+<html>
   <head>
+    <title>skeleton</title>
+
+    <!-- load my fp library -->
+    <script src="common.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- load angular 2 -->
+    <!-- IE required polyfill -->
+    <script src="node_modules/core-js/client/shim.min.js"></script>
+
+    <script src="node_modules/zone.js/dist/zone.js"></script>
+    <script src="node_modules/reflect-metadata/Reflect.js"></script>
+    <script src="node_modules/rxjs/bundles/Rx.umd.js"></script>
+    <script src="node_modules/@angular/core/bundles/core.umd.js"></script>
+    <script src="node_modules/@angular/common/bundles/common.umd.js"></script>
+    <script src="node_modules/@angular/compiler/bundles/compiler.umd.js"></script>
+    <script src="node_modules/@angular/platform-browser/bundles/platform-browser.umd.js"></script>
+    <script src="node_modules/@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js"></script>
+
+    <!-- load app -->
+    <script src="app.js"></script>
   </head>
 
+  <!-- display the application -->
   <body>
-  	<!-- dependencies -->
-    <script src="fp_lib.js"></script>
-    <script src="jquery.js"></script>
-    <script src="angular.js"></script>
-    <script src="angular-route.js"></script>
-    <script src="app.js"></script>
-    <script src="a_st_ctrl.js"></script>
-    <script>
-      $.get ('/js_file_list', data => {
-        F.p (data.split ('\n')) (
-          L.filter (F.id)
-          >> L.filter (h => L.forall (F['<>'] (h)) ([
-            'fp_lib.js',
-            'jquery.js',
-            'angular.js',
-            'angular-route.js',
-            'app.js',
-          ]))
-          >> L.iter (h => $.get ('/' + h, eval))
-        )
-      })
-    </script>
-
-    <div ng-view></div>
+    <my-app>Loading...</my-app>
   </body>
 </html>

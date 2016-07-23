@@ -16,6 +16,9 @@ var F = {
   // 'a -> unit
   noop: _ => undefined,
 
+	// ('a -> 'b) -> unit
+	exec: f => f (),
+
   // bool -> unit
   exIf: x => {if (x) throw F.e},
 
@@ -139,6 +142,13 @@ var F = {
 
 	//
 	after: n => f => (...args) => n != 1 ? (n--, undefined) : f (...args),
+
+	//
+	before: n => f => (...args) => n != 1 ? undefined : (n--, f (...args)),
+}
+
+var S = {
+
 }
 
 var L = {
@@ -151,7 +161,7 @@ var L = {
 	// all functions assume dense 0-indexed arrays
 
   // 'a -> 'a list -> 'a list
-  cons: h => l => [h].concat (l),
+  cons: h => l => [h, ...l],
 
   // 'a list -> 'a
 	head: l => F.exIf (L.isEmpty (l)) || l[0],

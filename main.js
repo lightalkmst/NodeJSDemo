@@ -47,29 +47,7 @@ var cfg =
 // DEPENDENCIES //
 //              //
 //////////////////
-var dl_file = file => src => request (src).pipe (fs.createWriteStream (file))
-
 var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
-
-F.p ([[
-  'frontend/js/angular.js',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.js'
-], [
-  'frontend/js.map/angular.js.map',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular.js.map'
-], [
-  'frontend/js/angular-route.js',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.js'
-], [
-  'frontend/js.map/angular-route.js.map',
-  'https://code.angularjs.org/' + cfg.ng_vers + '/angular-route.js.map'
-], [
-  'frontend/js/jquery.min.js',
-   'https://code.jquery.com/jquery-' + cfg.jq_vers + '.min.js'
-]]) (
-  L.map (L.map (min_for_prod))
-  >> L.iter (h => dl_file (h [0]) (h [1]))
-)
 
 //
 // New stuff goes here
@@ -159,34 +137,50 @@ get ('js_file_list') ((req, resp) => {
 //              //
 //////////////////
 var does_not_exist = (req, resp) => {
-  log ('Failed attempt to access nonexistent resource ' + req.url)
+  log ('Attempted to access nonexistent resource ' + req.url)
   write (resp) (404, 'html', '<span style="font-size: 20">404 Page Does Not Exist</span>')
 }
 
-get ('*.js') ((req, resp) =>
-  fs.readFile ('common' + req.url, (e, data) =>
-    !e
-    ? write (resp) (200, 'js', data)
-    : fs.readFile ('frontend/js' + req.url, (e, data) =>
-      !e
-      ? write (resp) (200, 'js', data)
-      : does_not_exist (req, resp)
+// coalesce and serve all app files in a single request, making sure chosen file is first
+L.iter (h => {
+  var name = h[0]
+  var dir = h[1]
+  var first = h[2]
+  var js = ''
+  fs.readdir (dir, (e, data) =>
+    js = F.p (data) (
+      L.filter (h => h.indexOf (first) > -1)
+      >> L.cons (first)
+      >> L.filter (h => h.indexOf ('.min.') > -1 == cfg.prod)
+      >> L.map (h => fs.readFileSync (dir + h, 'utf8'))
+      >> L.reduce (F['+'])
     )
   )
-)
+  get (name) ((req, resp) => write (resp) (200, 'js', js))
+}) ([
+  ['common.js', 'common/', 'fp_lib.js'],
+  ['app.js', 'frontend/js/', 'app.js'],
+])
 
-L.iter (h =>
-  get ('*.' + h) ((req, resp) =>
-    fs.readFile ('frontend/' + h + req.url, (e, data) =>
+// serve all other requested files
+L.iter (h => {
+  get ('*.' + h) ((req, resp) => {
+    // check root and frontend folders
+    // use F.before() to enable async
+    var dirs = ['frontend/' + h, '.']
+    var pass = F.before (1) (x => write (resp) (200, h, x))
+    var fail = F.after (L.length (dirs)) (() => does_not_exist (req, resp))
+    L.iter (h => fs.readFile (h + req.url, (e, data) =>
       !e
-      ? write (resp) (200, h, data)
-      : does_not_exist (req, resp)
-    )
-  )
-) (['html', 'css', 'js.map'])
+      ? pass (data)
+      : fail ()
+    )) (dirs)
+  })
+}) (['js', 'html', 'css', 'js.map'])
 
+// set root address to index.html
 get ('/') ((req, resp) =>
-  fs.readFile ('frontend/html/index' + min + '.html', (e, data) =>
+  fs.readFile (min_for_prod ('frontend/html/index.html'), (e, data) =>
     !e
     ? write (resp) (200, 'html', data)
     : does_not_exist (req, resp)
