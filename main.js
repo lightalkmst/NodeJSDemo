@@ -49,6 +49,10 @@ var cfg =
 //////////////////
 var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
 
+var is_min = F.swap (S.contains) ('.min')
+
+var is_for_env = F.c () (is_min >> F['=='] (cfg.prod))
+
 //
 // New stuff goes here
 // v v v
@@ -103,6 +107,8 @@ var put = rest ('put')
 
 var del = rest ('delete')
 
+var all = rest ('all')
+
 //////////////
 //          //
 // REST API //
@@ -136,30 +142,35 @@ get ('js_file_list') ((req, resp) => {
 // FILE SERVING //
 //              //
 //////////////////
-var does_not_exist = (req, resp) => {
-  log ('Attempted to access nonexistent resource ' + req.url)
-  write (resp) (404, 'html', '<span style="font-size: 20">404 Page Does Not Exist</span>')
-}
+var does_not_exist = (() => {
+  var file = fs.readFileSync ('frontend/html/404.html')
+  return (req, resp) => {
+    log ('Attempted to access nonexistent resource ' + req.url)
+    write (resp) (404, 'html', file)
+  }
+}) ()
 
 // coalesce and serve all app files in a single request, making sure chosen file is first
 L.iter (h => {
   var name = h[0]
   var dir = h[1]
-  var first = h[2]
+  var first = L.map (min_for_prod) (h[2])
+  var last = L.map (min_for_prod) (h[3])
   var js = ''
   fs.readdir (dir, (e, data) =>
     js = F.p (data) (
-      L.filter (h => h.indexOf (first) > -1)
-      >> L.cons (first)
-      >> L.filter (h => h.indexOf ('.min.') > -1 == cfg.prod)
+      L.filter (is_for_env)
+      >> L.filter (h => L.forall (F['<>'] (h)) (first))
+      >> L.filter (h => L.forall (F['<>'] (h)) (last))
+      >> (l => [...first, ...l, ...last])
       >> L.map (h => fs.readFileSync (dir + h, 'utf8'))
-      >> L.reduce (F['+'])
+      >> L.reduce (a => h => a + ';' + h)
     )
   )
   get (name) ((req, resp) => write (resp) (200, 'js', js))
 }) ([
-  ['common.js', 'common/', 'fp_lib.js'],
-  ['app.js', 'frontend/js/', 'app.js'],
+  ['common.js', 'common/', ['fp_lib.js'], []],
+  ['app.js', 'frontend/js/', [], []],
 ])
 
 // serve all other requested files
@@ -178,8 +189,11 @@ L.iter (h => {
   })
 }) (['js', 'html', 'css', 'js.map'])
 
+// serve config
+get ('cfg') ((req, resp) => write (resp) (200, 'plain', JSON.stringify (cfg.frontend || {})))
+
 // set root address to index.html
-get ('/') ((req, resp) =>
+get ('') ((req, resp) =>
   fs.readFile (min_for_prod ('frontend/html/index.html'), (e, data) =>
     !e
     ? write (resp) (200, 'html', data)

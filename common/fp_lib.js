@@ -20,7 +20,7 @@ var F = {
 	exec: f => f (),
 
   // bool -> unit
-  exIf: x => {if (x) throw F.e},
+  ex_if: x => {if (x) throw F.e},
 
   // yes, i know it's weak equality
   '=': x => y => x == y,
@@ -70,6 +70,9 @@ var F = {
   //  Functions  //
   //             //
   /////////////////
+
+	// ('a -> bool) -> ('a -> bool)
+	neg: f => (...x) => ! f (...x),
 
 	// (unit -> 'a) -> 'a
   try: (p, ...fs) => {
@@ -147,10 +150,6 @@ var F = {
 	before: n => f => (...args) => n != 1 ? undefined : (n--, f (...args)),
 }
 
-var S = {
-
-}
-
 var L = {
   /////////////
   //         //
@@ -164,10 +163,10 @@ var L = {
   cons: h => l => [h, ...l],
 
   // 'a list -> 'a
-	head: l => F.exIf (L.isEmpty (l)) || l[0],
+	head: l => F.ex_if (L.isEmpty (l)) || l[0],
 
   // 'a list -> 'a list
-	tail: l => F.exIf (L.isEmpty (l)) || l.slice (1),
+	tail: l => F.ex_if (L.isEmpty (l)) || l.slice (1),
 
   // 'a list -> int
   length: l => l.length,
@@ -176,7 +175,7 @@ var L = {
 	isEmpty: l => l.length == 0,
 
   // int -> 'a list -> 'a
-  nth: n => l => F.exIf (n >= L.length (l)) || l[n],
+  nth: n => l => F.ex_if (n >= L.length (l)) || l[n],
 
   // int -> int -> int list
   range: x => y => {
@@ -228,7 +227,7 @@ var L = {
   },
 
   // ('a -> bool) -> 'a list -> 'a
-  find: f => l => F.exIf (! L.contains (f) (l)) || l.find (f),
+  find: f => l => F.ex_if (! L.contains (f) (l)) || l.find (f),
 
   // ('a -> bool) -> 'a list -> 'a list
   filter: f => l => l.filter (f),
@@ -275,11 +274,11 @@ var L = {
   append: l1 => l2 => l1.concat (l2),
 
   // 'a list -> 'b list -> bool
-  unequalLength: l1 => l2 => l1.length == l2.length,
+  unequal_length: l1 => l2 => l1.length == l2.length,
 
   // (int -> 'a -> 'b -> unit) -> 'a list -> 'b list -> unit
   iteri2: f => l1 => l2 => {
-  	F.exIf (L.unequalLength (l1) (l2))
+  	F.ex_if (L.unequal_length (l1) (l2))
     for (var i in l1) {
     	f (i) (l1[i]) (l2[i])
     }
@@ -385,7 +384,7 @@ var M = {
   },
 
   // ('a -> bool) -> ('b, 'a) map -> 'a
-  find: f => m => F.exIf (! L.contains (f) (M.vals (m))) || L.find (f) (M.vals (m)),
+  find: f => m => F.ex_if (! L.contains (f) (M.vals (m))) || L.find (f) (M.vals (m)),
 
   // ('a -> bool) -> 'a list -> 'a list
   filter: f => m => {
@@ -411,4 +410,50 @@ var M = {
 
   // 'a -> ('a, 'b) map -> 'b list
   pluck: x => m => L.map (h => m[h]) (M.keys (m)),
+}
+
+var S = {
+	// string -> int
+	length: s => s.length,
+
+	// int -> string -> string
+	get: n => s => s[n],
+
+	// int -> int -> string -> string
+	substr: x => y => s => s.substring (x, y > -1 ? y : y + 1 + S.length (s)),
+
+	concat: (...s) => L.fold (F['+']) ('') (...s),
+
+	// string -> string -> int
+	index: s1 => s2 => s1.indexOf (s2),
+
+	// string -> string -> bool
+	contains: s1 => s2 => s1.includes (s2),
+
+	// string -> string -> int
+	compare: s1 => s2 => s1.localeCompare (s2),
+
+	// string -> regex -> string array
+	match: s => r => s.match (r),
+
+	// string -> regex -> string -> string
+	replace: s1 => r => s2 => s1.replace (r, s2),
+
+	// string -> string -> int
+	rindex: s1 => s2 => s1.lastIndexOf (s2),
+
+	// string -> regex -> int
+	search: s => r => s.search (r),
+
+	// string -> string/regex -> string array
+	split: s => r => s.split (r),
+
+	// string -> string
+	lower: s => s.toLocaleLowerCase (),
+
+	// string -> string
+	upper: s => s.toLocaleUpperCase (),
+
+	// string -> string
+	trim: s => s.trim (),
 }
