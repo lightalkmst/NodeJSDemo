@@ -410,6 +410,18 @@ var M = {
 
   // 'a -> ('a, 'b) map -> 'b list
   pluck: x => m => L.map (h => m[h]) (M.keys (m)),
+
+	// ('a, 'b) map -> ('a, 'b) map -> ('a, 'b) map
+	extend: m1 => m2 => {
+		var ans = {}
+		for (k in m1) {
+			ans[k] = m1[k]
+		}
+		for (k in m2) {
+			ans[k] = m2[k]
+		}
+		return ans
+	}
 }
 
 var S = {
@@ -422,7 +434,7 @@ var S = {
 	// int -> int -> string -> string
 	substr: x => y => s => s.substring (x, y > -1 ? y : y + 1 + S.length (s)),
 
-	concat: (...s) => L.fold (F['+']) ('') (...s),
+	concat: (...s) => L.fold (F['+']) ('') (s),
 
 	// string -> string -> int
 	index: s1 => s2 => s1.indexOf (s2),

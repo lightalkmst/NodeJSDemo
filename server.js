@@ -16,10 +16,11 @@ eval (fs.readFileSync ('common/fp_lib.js', 'utf8'))
 // CONFIG //
 //        //
 ////////////
+
 var cfg =
   F.try (true, _ => {
     var ans = {}
-    F.p (fs.readFileSync ('main.cfg', 'utf8')) (
+    F.p (fs.readFileSync ('properties.cfg', 'utf8')) (
       (x => x.split ('\n'))
       >> L.filter (F.id)
       >> L.map (h => {
@@ -47,27 +48,19 @@ var cfg =
 // DEPENDENCIES //
 //              //
 //////////////////
+
 var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
 
 var is_min = F.swap (S.contains) ('.min')
 
 var is_for_env = F.c () (is_min >> F['=='] (cfg.prod))
 
-//
-// New stuff goes here
-// v v v
-
-
-
-// ^ ^ ^
-// New stuff goes here
-//
-
 /////////////
 //         //
 // ROUTING //
 //         //
 /////////////
+
 var headers = {
   css: _ => ({
     'Content-Type': 'text/css',
@@ -142,6 +135,7 @@ get ('js_file_list') ((req, resp) => {
 // FILE SERVING //
 //              //
 //////////////////
+
 var does_not_exist = (() => {
   var file = fs.readFileSync ('frontend/html/404.html')
   return (req, resp) => {
@@ -170,7 +164,7 @@ L.iter (h => {
   get (name) ((req, resp) => write (resp) (200, 'js', js))
 }) ([
   ['common.js', 'common/', ['fp_lib.js'], []],
-  ['app.js', 'frontend/js/', [], []],
+  ['app.js', 'frontend/js/', ['app.js'], []],
 ])
 
 // serve all other requested files
