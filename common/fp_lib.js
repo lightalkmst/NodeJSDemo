@@ -432,7 +432,7 @@ var S = {
 	get: n => s => s[n],
 
 	// int -> int -> string -> string
-	substr: x => y => s => s.substring (x, y > -1 ? y : y + 1 + S.length (s)),
+	substr: s => x => y => s.substring (x, y > -1 ? y : y + 1 + S.length (s)),
 
 	concat: (...s) => L.fold (F['+']) ('') (s),
 

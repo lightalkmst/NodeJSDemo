@@ -23,12 +23,13 @@ var cfg =
     F.p (fs.readFileSync ('properties.cfg', 'utf8')) (
       (x => x.split ('\n'))
       >> L.filter (F.id)
+      >> L.filter (h => h[0] != '#')
       >> L.map (h => {
         var i = h.indexOf ('=')
-        return [h.slice (0, i), h.slice (i + 1, -1)]
+        return [S.substr (h) (0) (i), S.substr (h) (i + 1) (-1)]
       })
-      >> L.map (L.map (h => h.trim ()))
-      >> L.map (h => [h [0].split ('.'), h [1]])
+      >> L.map (L.map (S.trim))
+      >> L.map (h => [S.split (h [0]) ('.'), h [1]])
       >> L.iter (h => {
         var k = h [0].pop ()
         var cfg =

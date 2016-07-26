@@ -19,7 +19,7 @@ var create_component = x => m1 => m2 => {
   m1.template || $.ajax ({
       url: '/' + x + '.html',
       success: data => html = data,
-      async: false
+      async: false,
   })
   return app[x] =
     ng.core.Component (M.extend (m1) ({
