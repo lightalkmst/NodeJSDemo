@@ -1,6 +1,6 @@
 # skeleton (in-progress)
 
-A functional programming framework wrapper around AngularJS v2.0, NodeJS, and MySQL to facilitate rapid setup and development of web applications via automatic adaptation to additional assets to the project to reduce overhead of expansion and integration.
+A functional programming framework wrapper around AngularJS v2.0, NodeJS, and MySQL to facilitate rapid setup and development of RESTful API web applications via automatic adaptation to additional assets to the project to reduce overhead of expansion and integration.
 
 
 Features:
