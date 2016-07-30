@@ -23,7 +23,7 @@ var create_component = x => m1 => m2 => {
       success: data => html = data,
       async: false,
   })
-  return app[x] =
+  return app [x] =
     ng.core.Component (M.extend (m1) ({
       selector: x,
       template: m1.template || html,
@@ -34,7 +34,7 @@ var create_component = x => m1 => m2 => {
 }
 
 document.addEventListener ('DOMContentLoaded', function() {
-  ng.router.Routes (L.map (h => ({path: '/' + h, component: app[h], name: h})) (M.keys (app))) (
+  ng.router.Routes (L.map (h => ({path: '/' + h, component: app [h], name: h})) (M.keys (app))) (
     create_component ('app') ({
       directives: [ng.router.ROUTER_DIRECTIVES],
       providers: [ng.router.ROUTER_PROVIDERS],

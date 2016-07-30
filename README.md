@@ -1,10 +1,10 @@
-# NodeJSDemo
-First time trying out NodeJS
+# skeleton
 
-1) install nodejs
+A webapp framework wrapper around AngularJS v2.0, NodeJS, and MySQL
 
-2) > npm install express
+(MySQL not included yet)
 
-3) > npm install request
-
-4) > node main.js
+To run:
+Install NodeJS v6.x and NPM
+> npm install
+> npm start
