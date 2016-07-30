@@ -33,17 +33,15 @@ var create_component = x => m1 => m2 => {
     }))
 }
 
-;(app => {
-  document.addEventListener ('DOMContentLoaded', function() {
-    ng.router.Routes (L.map (h => ({path: '/' + h, component: app[h], name: h})) (M.keys (app))) (
-      create_component ('app') ({
-        directives: [ng.router.ROUTER_DIRECTIVES],
-        providers: [ng.router.ROUTER_PROVIDERS],
-      }) ({})
-    )
+document.addEventListener ('DOMContentLoaded', function() {
+  ng.router.Routes (L.map (h => ({path: '/' + h, component: app[h], name: h})) (M.keys (app))) (
+    create_component ('app') ({
+      directives: [ng.router.ROUTER_DIRECTIVES],
+      providers: [ng.router.ROUTER_PROVIDERS],
+    }) ({})
+  )
 
-    ng.platformBrowserDynamic.bootstrap (app.app, [ng.router.ROUTER_PROVIDERS])
+  ng.platformBrowserDynamic.bootstrap (app.app, [ng.router.ROUTER_PROVIDERS])
 
-    debug && log ('app.js: application has started')
-  })
-}) (window.app || (window.app = {}))
+  cfg.debug && log ('app.js: application has started')
+})
