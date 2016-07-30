@@ -52,9 +52,7 @@ var cfg =
 
 var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
 
-var is_min = F.swap (S.contains) ('.min')
-
-var is_for_env = F.c () (is_min >> F['=='] (cfg.prod))
+var is_for_env = F.c () (F.swap (S.contains) ('.min') >> F['=='] (cfg.prod))
 
 /////////////
 //         //
@@ -109,23 +107,12 @@ var all = rest ('all')
 //          //
 //////////////
 
-get ('js_file_list') ((req, resp) => {
-  var dirs = ['common/', 'frontend/js/']
-  var files = ''
-  var f = F.after (2) (_ => write (resp) (200, 'plain', files))
-  L.iter (h =>
-    fs.readdir (h, (e, data) => {
-      files += L.reduce (F['+']) (L.map (h => h + '\n') (data))
-      f ()
-    })
-  ) (dirs)
-})
-
+var env = {}
 //
 // New stuff goes here
 // v v v
 
-
+// inject/eval stuff here
 
 // ^ ^ ^
 // New stuff goes here
