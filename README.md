@@ -14,7 +14,7 @@ Features:
   - Bundles and delivers JavaScript files so that all files are automatically delivered to the frontend
     - Function hook for angular components to be added to the angular router on the frontend
       - Adding a new component does not require syncing across multiple files, or even multiple sites
-
+- Accepts production mode for frontend in configuration file
 
 
 Developed with the functional programming paradigm, including currying, pointless style, and inversion of control to minimize boilerplate and increase abstraction, security, and provability.
