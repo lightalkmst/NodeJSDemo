@@ -169,7 +169,7 @@ L.iter (h => {
       : fail ()
     )) (dirs)
   })
-}) (['js', 'html', 'css', 'js.map'])
+}) (['html', 'css', 'js.map'])
 
 // serve config
 get ('cfg') ((req, resp) => write (resp) (200, 'plain', JSON.stringify (cfg.frontend || {})))
