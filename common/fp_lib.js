@@ -271,7 +271,7 @@ var L = {
   ///////////////
 
   // 'a list -> 'a list -> 'a list
-  append: l1 => l2 => l1.concat (l2),
+  append: l1 => l2 => [...l1, ...l2],
 
   // 'a list -> 'b list -> bool
   unequal_length: l1 => l2 => l1.length == l2.length,
@@ -326,6 +326,9 @@ var M = {
 
   // ('a, 'b) map -> bool
 	isEmpty: m => m.keys ().length == 0,
+
+	// 'a -> ('a, 'b') map -> 'b
+	get: x => m => m [x],
 
   // ('a * 'b) list -> ('a * 'b) map
   create: l => {
@@ -407,9 +410,6 @@ var M = {
 
   // ('a -> bool) -> ('b, 'a) map -> (('b, 'a) map * ('b, 'a) map)
   partition: f => m => [M.filter (f) (m), M.filter (h => ! f (h)) (m)],
-
-  // 'a -> ('a, 'b) map -> 'b list
-  pluck: x => m => L.map (h => m[h]) (M.keys (m)),
 
 	// ('a, 'b) map -> ('a, 'b) map -> ('a, 'b) map
 	extend: m1 => m2 => {

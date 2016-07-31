@@ -144,7 +144,7 @@ L.iter (h => {
       L.filter (is_for_env)
       >> L.filter (h => L.forall (F['<>'] (h)) (first))
       >> L.filter (h => L.forall (F['<>'] (h)) (last))
-      >> (l => [...first, ...l, ...last])
+      >> (l => [... first, ... l, ... last])
       >> L.map (h => fs.readFileSync (dir + h, 'utf8'))
       >> L.reduce (a => h => a + ';' + h)
     )
