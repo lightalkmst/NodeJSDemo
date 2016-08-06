@@ -9,7 +9,18 @@ var request = require ('request')
 var log = x => console.log ('main: ' + x)
 
 // my library
-eval (fs.readFileSync ('common/fp_lib.js', 'utf8'))
+var fp_lib = 'common/fp_lib.js'
+eval (fs.readFileSync (fp_lib, 'utf8'))
+
+var eval_dir = h =>
+  F.p (fs.readdirSync (h)) (
+      L.map (F['+'] (h))
+      >> L.filter (F['!='] (fp_lib))
+      >> L.map (h => fs.readFileSync (h, 'utf8'))
+      >> L.iter (eval)
+  )
+
+eval_dir ('common/')
 
 ////////////
 //        //
@@ -29,7 +40,7 @@ var cfg =
         return [S.substr (h) (0) (i), S.substr (h) (i + 1) (-1)]
       })
       >> L.map (L.map (S.trim))
-      >> L.map (h => [S.split (h [0]) ('.'), h [1]])
+      >> L.map (h => [h [0].split ('.'), h [1]])
       >> L.iter (h => {
         var k = h [0].pop ()
         var cfg =
@@ -52,7 +63,9 @@ var cfg =
 
 var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
 
-var is_for_env = F.c () (F.swap (S.contains) ('.min') >> F['=='] (cfg.prod))
+var is_min = F.swap (S.contains) ('.min')
+
+var is_for_env = F.c () (is_min >> F['=='] (cfg.prod))
 
 /////////////
 //         //
@@ -107,16 +120,7 @@ var all = rest ('all')
 //          //
 //////////////
 
-var env = {}
-//
-// New stuff goes here
-// v v v
-
-// inject/eval stuff here
-
-// ^ ^ ^
-// New stuff goes here
-//
+eval_dir ('backend/')
 
 //////////////////
 //              //
@@ -142,8 +146,8 @@ L.iter (h => {
   fs.readdir (dir, (e, data) =>
     js = F.p (data) (
       L.filter (is_for_env)
-      >> L.filter (h => L.forall (F['<>'] (h)) (first))
-      >> L.filter (h => L.forall (F['<>'] (h)) (last))
+      >> L.filter (h => L.forall (F['!='] (h)) (first))
+      >> L.filter (h => L.forall (F['!='] (h)) (last))
       >> (l => [... first, ... l, ... last])
       >> L.map (h => fs.readFileSync (dir + h, 'utf8'))
       >> L.reduce (a => h => a + ';' + h)
@@ -169,7 +173,7 @@ L.iter (h => {
       : fail ()
     )) (dirs)
   })
-}) (['html', 'css', 'js.map'])
+}) (['js', 'html', 'css', 'js.map'])
 
 // serve config
 get ('cfg') ((req, resp) => write (resp) (200, 'plain', JSON.stringify (cfg.frontend || {})))

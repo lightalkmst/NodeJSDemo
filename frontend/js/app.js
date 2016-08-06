@@ -34,7 +34,7 @@ var create_component = x => m1 => m2 => {
 }
 
 document.addEventListener ('DOMContentLoaded', function() {
-  ng.router.Routes (L.map (h => ({path: '/' + h, component: app [h], name: h})) (M.keys (app))) (
+  ng.router.Routes (M.mapk (k => v => ({path: '/' + k, component: v, name: k})) (app)) (
     create_component ('app') ({
       directives: [ng.router.ROUTER_DIRECTIVES],
       providers: [ng.router.ROUTER_PROVIDERS],
