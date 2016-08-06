@@ -3,6 +3,7 @@
 // FORKING //
 //         //
 /////////////
+
 var cluster = require ('cluster')
 
 var log = x => console.log ('main (' + (cluster.isMaster ? 'm' : cluster.worker.id) + '): ' + x)

@@ -7,6 +7,7 @@ $.ajax ({
 })
 
 var get_logger = x => !cfg.prod ? y => console.log (x + ': ' + y) : _ => {}
+var log = get_logger ('app.js')
 
 // set window title
 window.document.title = cfg.title
@@ -36,9 +37,7 @@ var create_component = x => m1 => m2 => {
     }))
 }
 
-document.addEventListener ('DOMContentLoaded', function() {
-  var log = get_logger ('app.js')
-
+document.addEventListener ('DOMContentLoaded', function () {
   ng.router.Routes (M.mapk (k => v => ({path: '/' + k, component: v, name: k})) (app)) (
     create_component ('app') ({
       directives: [ng.router.ROUTER_DIRECTIVES],
