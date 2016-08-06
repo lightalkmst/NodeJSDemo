@@ -8,8 +8,8 @@ var cluster = require ('cluster')
 var log = x => console.log ('main (' + (cluster.isMaster ? 'm' : cluster.worker.id) + '): ' + x)
 
 if (cluster.isMaster) {
-  var cpuCount = require ('os').cpus ().length
-  for (var i = 0; i < cpuCount; i++) cluster.fork ()
+  var cores = require ('os').cpus ().length
+  for (var i = 0; i < cores; i++) cluster.fork ()
 
   cluster.on ('exit', p => {
     log ('Process ' + p.id + ' died')
@@ -91,31 +91,19 @@ else {
   //         //
   /////////////
 
-  var headers = {
-    css: _ => ({
-      'Content-Type': 'text/css',
-      'Expires': new Date ().toUTCString ()
-    }),
-    html: _ => ({
-      'Content-Type': 'text/html',
-      'Expires': new Date ().toUTCString ()
-    }),
-    js: _ => ({
-      'Content-Type': 'text/javascript',
-      'Expires': new Date ().toUTCString ()
-    }),
-    'js.map': _ => ({
-      'Content-Type': 'text/plain',
-      'Expires': new Date ().toUTCString ()
-    }),
-    plain: _ => ({
-      'Content-Type': 'text/plain',
-      'Expires': new Date ().toUTCString ()
-    }),
-  }
+  var get_header = x => ({
+    'Content-Type': 'text/' + {
+      css: 'css',
+      html: 'html',
+      js: 'javascript',
+      'js.map': 'plain',
+      plain: 'plain',
+    } [x],
+    'Expires': new Date ().toUTCString (),
+  })
 
   var write = resp => (...r) => {
-    resp.writeHead (r [0], headers[r [1]] ())
+    resp.writeHead (r [0], get_header (r [1]))
     resp.write (r [2])
     resp.end ()
   }

@@ -1,12 +1,15 @@
-var log = console.log.bind (console)
-
 // get config from server
 var cfg = {}
 $.ajax ({
   url: '/cfg',
-  success: data => cfg = data,
+  success: data => cfg = JSON.parse (data),
   async: false,
 })
+
+var get_logger = x => !cfg.prod ? y => console.log (x + ': ' + y) : _ => {}
+
+// set window title
+window.document.title = cfg.title
 
 // angular app space
 var app = {}
@@ -34,6 +37,8 @@ var create_component = x => m1 => m2 => {
 }
 
 document.addEventListener ('DOMContentLoaded', function() {
+  var log = get_logger ('app.js')
+
   ng.router.Routes (M.mapk (k => v => ({path: '/' + k, component: v, name: k})) (app)) (
     create_component ('app') ({
       directives: [ng.router.ROUTER_DIRECTIVES],
@@ -43,5 +48,5 @@ document.addEventListener ('DOMContentLoaded', function() {
 
   ng.platformBrowserDynamic.bootstrap (app.app, [ng.router.ROUTER_PROVIDERS])
 
-  cfg.debug && log ('app.js: application has started')
+  log ('Application has started')
 })
