@@ -3,14 +3,13 @@
 // FORKING //
 //         //
 /////////////
-
 var cluster = require ('cluster')
 
 var log = x => console.log ('main (' + (cluster.isMaster ? 'm' : cluster.worker.id) + '): ' + x)
 
 if (cluster.isMaster) {
-  var cores = require ('os').cpus ().length
-  for (var i = 0; i < cores; i++) cluster.fork ()
+  var cpuCount = require ('os').cpus ().length
+  for (var i = 0; i < cpuCount; i++) cluster.fork ()
 
   cluster.on ('exit', p => {
     log ('Process ' + p.id + ' died')
@@ -179,7 +178,7 @@ else {
         : fail ()
       )) (dirs)
     })
-  }) (['js', 'html', 'css', 'js.map'])
+  }) (['js', 'html', 'css', 'js.map', 'jpg'])
 
   // serve config
   get ('cfg') ((req, resp) => write (resp) (200, 'plain', JSON.stringify (cfg.frontend || {})))
