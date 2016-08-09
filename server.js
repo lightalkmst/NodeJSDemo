@@ -47,7 +47,7 @@ else {
 
   eval_dir ('common/')
 
-  eval ('var cfg = ' + fs.readFileSync ('properties.cfg', 'utf8'))
+  eval ('var cfg = ' + fs.readFileSync ('properties.js', 'utf8'))
 
   var mysql = require ('mysql').createConnection (cfg.db)
 
