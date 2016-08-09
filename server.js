@@ -11,13 +11,19 @@ if (cluster.isMaster) {
   var cpuCount = require ('os').cpus ().length
   for (var i = 0; i < cpuCount; i++) cluster.fork ()
 
-  cluster.on ('exit', p => {
-    log ('Process ' + p.id + ' died')
-    cluster.fork ()
-    log ('New process started')
-  })
+  // cluster.on ('exit', p => {
+  //   log ('Process ' + p.id + ' died')
+  //   cluster.fork ()
+  //   log ('New process started')
+  // })
 }
 else {
+  ////////////////
+  //            //
+  // INITIALIZE //
+  //            //
+  ////////////////
+
   var http = require ('http')
   var fs = require ('fs')
 
@@ -26,7 +32,7 @@ else {
 
   var request = require ('request')
 
-  // my library
+  // my libraries
   var fp_lib = 'common/fp_lib.js'
   eval (fs.readFileSync (fp_lib, 'utf8'))
 
@@ -39,12 +45,6 @@ else {
     )
 
   eval_dir ('common/')
-
-  ////////////
-  //        //
-  // CONFIG //
-  //        //
-  ////////////
 
   var cfg =
     F.try (true, _ => {
@@ -72,6 +72,14 @@ else {
       )
       return ans
     }) || {}
+
+  var mysql = require ('mysql')
+  var connection = mysql.createConnection ({
+    host: cfg.db.url,
+    user: cfg.db.user,
+    password: cfg.db.pass,
+    database: cfg.db.db,
+  })
 
   //////////////////
   //              //
