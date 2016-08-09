@@ -27,8 +27,7 @@ else {
   var http = require ('http')
   var fs = require ('fs')
 
-  var express = require ('express')
-  var app = express ()
+  var express = require ('express') ()
 
   var request = require ('request')
 
@@ -73,8 +72,7 @@ else {
       return ans
     }) || {}
 
-  var mysql = require ('mysql')
-  var connection = mysql.createConnection ({
+  var mysql = require ('mysql').createConnection ({
     host: cfg.db.url,
     user: cfg.db.user,
     password: cfg.db.pass,
@@ -116,7 +114,7 @@ else {
     resp.end ()
   }
 
-  var rest = m => x => f => app [m] ('/' + x, f)
+  var rest = m => x => f => express [m] ('/' + x, f)
 
   var get = rest ('get')
 
@@ -202,6 +200,6 @@ else {
 
   get ('*') (does_not_exist)
 
-  app.listen (8080)
+  express.listen (8080)
   log ('Server is ready')
 }
