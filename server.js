@@ -11,11 +11,11 @@ if (cluster.isMaster) {
   var cpuCount = require ('os').cpus ().length
   for (var i = 0; i < cpuCount; i++) cluster.fork ()
 
-  // cluster.on ('exit', p => {
-  //   log ('Process ' + p.id + ' died')
-  //   cluster.fork ()
-  //   log ('New process started')
-  // })
+  cluster.on ('exit', p => {
+    log ('Process ' + p.id + ' died')
+    cluster.fork ()
+    log ('New process started')
+  })
 }
 else {
   ////////////////
@@ -40,7 +40,9 @@ else {
         L.map (F['+'] (h))
         >> L.filter (F['!='] (fp_lib))
         >> L.map (h => fs.readFileSync (h, 'utf8'))
-        >> L.iter (eval)
+        // wrapper for eval required
+        // operates on global scope if unwrapped
+        >> L.iter (h => eval (h))
     )
 
   eval_dir ('common/')
