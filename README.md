@@ -19,8 +19,6 @@ Features:
 
 Developed with the functional programming paradigm, including currying, pointless style, and inversion of control to minimize boilerplate and increase abstraction, security, and provability.
 
-(MySQL not included yet)
-
 To run:
 Install NodeJS v6.x and NPM
 > npm install

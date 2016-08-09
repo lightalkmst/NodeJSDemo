@@ -6,7 +6,7 @@ $.ajax ({
   async: false,
 })
 
-var get_logger = x => !cfg.prod ? y => console.log (x + ': ' + y) : _ => {}
+var get_logger = x => ! cfg.prod ? y => console.log (x + ': ' + y) : _ => {}
 var log = get_logger ('app.js')
 
 // set window title

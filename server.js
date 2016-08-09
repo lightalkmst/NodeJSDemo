@@ -202,6 +202,6 @@ else {
 
   get ('*') (does_not_exist)
 
-  express.listen (8080)
+  express.listen (cfg.port)
   log ('Server is ready')
 }
