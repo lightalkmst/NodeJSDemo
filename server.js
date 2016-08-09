@@ -47,39 +47,9 @@ else {
 
   eval_dir ('common/')
 
-  var cfg =
-    F.try (true, _ => {
-      var ans = {}
-      F.p (fs.readFileSync ('properties.cfg', 'utf8')) (
-        (x => x.split ('\n'))
-        >> L.filter (F.id)
-        >> L.filter (h => h[0] != '#')
-        >> L.map (h => {
-          var i = h.indexOf ('=')
-          return [S.substr (h) (0) (i), S.substr (h) (i + 1) (-1)]
-        })
-        >> L.map (L.map (S.trim))
-        >> L.map (h => [h [0].split ('.'), h [1]])
-        >> L.iter (h => {
-          var k = h [0].pop ()
-          var cfg =
-            L.fold (a => h =>
-              a[h] == undefined
-              ? a[h] = {}
-              : a[h]
-            ) (ans) (h [0])
-          cfg[k] = eval (h [1])
-        })
-      )
-      return ans
-    }) || {}
+  eval ('var cfg = ' + fs.readFileSync ('properties.cfg', 'utf8'))
 
-  var mysql = require ('mysql').createConnection ({
-    host: cfg.db.url,
-    user: cfg.db.user,
-    password: cfg.db.pass,
-    database: cfg.db.db,
-  })
+  var mysql = require ('mysql').createConnection (cfg.db)
 
   //////////////////
   //              //
