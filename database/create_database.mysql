@@ -1,0 +1,26 @@
+--
+-- Initialize database
+--
+
+DROP DATABASE IF EXISTS mydb;
+CREATE DATABASE mydb;
+USE mydb;
+
+--
+-- Initialize user creds
+--
+
+DROP TABLE IF EXISTS creds;
+CREATE TABLE creds (
+  user VARCHAR(255) UNIQUE,
+  pass VARCHAR(255),
+  id INT AUTO_INCREMENT,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE perms (
+  admin BOOL,
+  user BOOL,
+  id INT,
+  PRIMARY KEY (id)
+)

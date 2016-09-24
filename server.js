@@ -1,3 +1,27 @@
+////////////////
+//            //
+// INITIALIZE //
+//            //
+////////////////
+
+var fs = require ('fs')
+
+// my libraries
+var fp_lib = 'common/fp_lib.js'
+eval (fs.readFileSync (fp_lib, 'utf8'))
+
+// config
+var cfg = eval ('({' + fs.readFileSync ('properties.js', 'utf8') + '})')
+
+var eval_dir = h =>
+  F.p (fs.readdirSync (h)) (
+      L.map (F['+'] (h))
+      >> L.filter (F['!='] (fp_lib))
+      >> L.map (h => fs.readFileSync (h, 'utf8'))
+      >> L.fold (a => h => a + ';' + h) ('')
+      >> F.eval
+  )
+
 /////////////
 //         //
 // FORKING //
@@ -5,7 +29,11 @@
 /////////////
 var cluster = require ('cluster')
 
-var log = x => console.log ('main (' + (cluster.isMaster ? 'm' : cluster.worker.id) + '): ' + x)
+var log = x =>
+  console.log (
+    'main (' + (cluster.worker || {id: 'm'}).id + '): '
+    + (typeof x == 'object' ? JSON.stringify (x) : x)
+  )
 
 if (cluster.isMaster) {
   var cpuCount = require ('os').cpus ().length
@@ -13,8 +41,8 @@ if (cluster.isMaster) {
 
   cluster.on ('exit', p => {
     log ('Process ' + p.id + ' died')
-    cluster.fork ()
-    log ('New process started')
+    cfg.prod && cluster.fork ()
+    cfg.prod && log ('New process started')
   })
 }
 else {
@@ -25,31 +53,21 @@ else {
   ////////////////
 
   var http = require ('http')
-  var fs = require ('fs')
 
-  var express = require ('express') ()
+  var express = require ('express')
+  var app = express ()
 
   var request = require ('request')
 
-  // my libraries
-  var fp_lib = 'common/fp_lib.js'
-  eval (fs.readFileSync (fp_lib, 'utf8'))
+  cfg.db = M.extend ({
+    host: 'localhost',
+    user: 'root',
+    pass: '',
+    database: 'mydb',
+    multipleStatements: true,
+  }) (cfg.db)
 
-  var eval_dir = h =>
-    F.p (fs.readdirSync (h)) (
-        L.map (F['+'] (h))
-        >> L.filter (F['!='] (fp_lib))
-        >> L.map (h => fs.readFileSync (h, 'utf8'))
-        // wrapper for eval required
-        // operates on global scope if unwrapped
-        >> L.iter (h => eval (h))
-    )
-
-  eval_dir ('common/')
-
-  eval ('var cfg = ' + fs.readFileSync ('properties.js', 'utf8'))
-
-  var mysql = require ('mysql').createConnection (cfg.db)
+  var mysql = require ('mysql').createPool (cfg.db)
 
   //////////////////
   //              //
@@ -57,11 +75,13 @@ else {
   //              //
   //////////////////
 
-  var min_for_prod = x => cfg.prod ? x : x.replace (/\.min\./, '.')
+  var min_for_prod = x => cfg.prod ? x : S.replace (/\.min\./) ('.') (x)
 
   var is_min = F.swap (S.contains) ('.min')
 
   var is_for_env = F.c () (is_min >> F['=='] (cfg.prod))
+
+  eval_dir ('common/')
 
   /////////////
   //         //
@@ -80,13 +100,13 @@ else {
     'Expires': new Date ().toUTCString (),
   })
 
-  var write = resp => (...r) => {
-    resp.writeHead (r [0], get_header (r [1]))
-    resp.write (r [2])
-    resp.end ()
+  var write = res => (...r) => {
+    res.writeHead (r[0], get_header (r[1]))
+    res.write (r[2])
+    res.end ()
   }
 
-  var rest = m => x => f => express [m] ('/' + x, f)
+  var rest = m => x => f => app[m] ('/' + x, f)
 
   var get = rest ('get')
 
@@ -100,10 +120,144 @@ else {
 
   //////////////
   //          //
+  // SECURITY //
+  //          //
+  //////////////
+
+  var helmet = require ('helmet')
+  app.use (helmet ())
+
+  var sessions = require ('client-sessions')
+  app.use (sessions ({
+    cookieName: 'session',
+    secret: cfg.sessioning_secret, // should be a large unguessable string
+    duration: 24 * 60 * 60 * 1000,
+    cookie: {
+      path: '/',
+      maxAge: 60 * 1000,
+      ephemeral: false,
+      httpOnly: true,
+      // SSL only
+      secure: cfg.prod,
+    },
+  }))
+
+  var crypto = require ('crypto')
+
+  // this block subscribes the registration API
+  // this function sets the application-specific registration handler
+  var [set_register_handler, set_user_regex] = (() => {
+    var regex = /^.{0,255}$/
+    // set user profile
+    var handler = (req, res, id) => {
+      req.session.user = req.body.user
+      write (res) (200, 'plain', JSON.stringify ({success: true}))
+    }
+    get ('register') ((req, res) => {
+      var user = req.body.user
+      var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
+      if (! S.match (regex) (user)) return fail ('Invalid username')
+
+      var hash = crypto.createHash ('sha256')
+      hash.update (req.body.pass.toString ())
+      hash.update (cfg.cred_salt)
+      // delete req.body.pass
+      mysql.query (`
+        INSERT INTO creds
+        SET user = ?, pass = ?
+        ;
+        SELECT LAST_INSERT_ID ()
+        AS id
+      `, [
+        user,
+        hash.digest ('hex'),
+      ], (e, data) => {
+        ! e
+        ? handler (req, res, data[1][0].id)
+        :
+          e.code == 'ER_DUP_ENTRY'
+          ? fail ('Username is already in use')
+          : (
+            log ('Registration for user: ' + user + ' failed with code: ' + e.code),
+            fail ('Unknown error')
+          )
+      })
+    })
+    return [f => handler = f, r => regex = r]
+  }) ()
+
+  // this block subscribes the login API
+  // this function sets the application-specific login handler
+  var set_login_handler = (() => {
+    // set user profile
+    var handler = (req, res, data) => {
+      req.session.user = req.body.user
+      write (res) (200, 'plain', JSON.stringify ({success: true}))
+    }
+    get ('login') ((req, res) => {
+      var user = req.body.user
+      var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
+      // TODO change from url parameters to json body
+      var hash = crypto.createHash ('sha256')
+      hash.update (req.body.pass.toString ())
+      hash.update (cfg.cred_salt)
+      // delete req.body.pass
+      mysql.query (`
+        SELECT *
+        FROM creds
+        WHERE user = ?
+        AND pass = ?
+      `, [
+        user,
+        hash.digest ('hex'),
+      ], (e, data) => {
+        ! e
+        ?
+          data[0]
+          ? handler (req, res, data[0])
+          : fail ('The username/password combination does not exist')
+        : (
+          log ('Authentication for user: ' + user + ' failed with code: ' + e.code),
+          fail ('Unknown error')
+        )
+      })
+    })
+    return f => handler = f
+  }) ()
+
+  // this block subscribes the logout API
+  // this function sets the application-specific logout handler
+  var logout = (() => {
+    var handler = (req, res) => write (res) (200, 'plain', 'true') // set user profile
+    get ('login') ((req, res) => {
+      delete req.session.user
+      handler (req, res)
+    })
+    return f => handler = f
+  }) ()
+
+  // secured versions of REST subscribers
+  var [sec_get, sec_post, sec_put, sec_del, sec_all] = (() => {
+    var file = fs.readFileSync ('frontend/html/401.html')
+    // wraps REST subscriber to take additional auth predicate and fail if not passed, otherwise identical
+    return L.map (rest => path => pred => f =>
+      rest (path) ((req, res) =>
+        req.session && pred (req.session)
+        ? f (req, res)
+        : (
+          log ('Unauthorized attempt to access resource ' + req.url + ' by user: ' + (req.session.user || '-')),
+          write (res) (401, 'html', file)
+        )
+    )) ([get, post, put, del, all])
+  }) ()
+
+  //////////////
+  //          //
   // REST API //
   //          //
   //////////////
 
+  var env = {}
   eval_dir ('backend/')
 
   //////////////////
@@ -114,9 +268,9 @@ else {
 
   var does_not_exist = (() => {
     var file = fs.readFileSync ('frontend/html/404.html')
-    return (req, resp) => {
+    return (req, res) => {
       log ('Attempted to access nonexistent resource ' + req.url)
-      write (resp) (404, 'html', file)
+      write (res) (404, 'html', file)
     }
   }) ()
 
@@ -137,7 +291,7 @@ else {
         >> L.reduce (a => h => a + ';' + h)
       )
     )
-    get (name) ((req, resp) => write (resp) (200, 'js', js))
+    get (name) ((req, res) => write (res) (200, 'js', js))
   }) ([
     ['common.js', 'common/', ['fp_lib.js'], []],
     ['app.js', 'frontend/js/', ['app.js'], []],
@@ -145,13 +299,13 @@ else {
 
   // serve all other requested files
   L.iter (h => {
-    get ('*.' + h) ((req, resp) => {
+    get ('*.' + h) ((req, res) => {
       // check root and frontend folders
       var dirs = ['frontend/' + h, '.']
-      var pass = F.before (1) (x => write (resp) (200, h, x))
-      var fail = F.after (L.length (dirs)) (() => does_not_exist (req, resp))
+      var pass = F.before (1) (x => write (res) (200, h, x))
+      var fail = F.after (L.length (dirs)) (() => does_not_exist (req, res))
       L.iter (h => fs.readFile (h + req.url, (e, data) =>
-        !e
+        ! e
         ? pass (data)
         : fail ()
       )) (dirs)
@@ -159,19 +313,25 @@ else {
   }) (['js', 'html', 'css', 'js.map', 'jpg'])
 
   // serve config
-  get ('cfg') ((req, resp) => write (resp) (200, 'plain', JSON.stringify (cfg.frontend || {})))
+  get ('cfg') ((req, res) => write (res) (200, 'plain', JSON.stringify (cfg.frontend || {})))
+
+  // serve favorites icon
+  get ('favicon.ico') ((() => {
+    var file = fs.readFileSync ('frontend/jpg/logo.jpg')
+    return (req, res) => write (res) (404, 'html', file)
+  }) ())
 
   // set root address to index.html
-  get ('') ((req, resp) =>
+  get ('') ((req, res) =>
     fs.readFile (min_for_prod ('frontend/html/index.html'), (e, data) =>
-      !e
-      ? write (resp) (200, 'html', data)
-      : does_not_exist (req, resp)
+      ! e
+      ? write (res) (200, 'html', data)
+      : does_not_exist (req, res)
     )
   )
 
   get ('*') (does_not_exist)
 
-  express.listen (cfg.port)
+  app.listen (cfg.port || 8080)
   log ('Server is ready')
 }

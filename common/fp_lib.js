@@ -22,6 +22,11 @@ var F = {
   // bool -> unit
   ex_if: x => {if (x) throw F.e},
 
+	// string -> 'a
+	// wrapper for eval required
+	// operates at global scope (ie: ignores variables) if pointless form
+	eval: x => eval (x),
+
   // yes, i know it's weak equality
   '=': x => y => x == y,
   '==': x => y => x == y,
@@ -330,7 +335,7 @@ var M = {
 	// 'a -> ('a, 'b') map -> 'b
 	get: x => m => m [x],
 
-  // ('a * 'b) list -> ('a * 'b) map
+  // ('a * 'b) list -> ('a, 'b) map
   create: l => {
   	var ans = {}
     L.iter (h => ans[h[0]] = h[1])
@@ -356,7 +361,7 @@ var M = {
   iter: f => m => {for (var k in m) f (m[k])},
 
   // ('a -> 'b -> unit) -> ('a, 'b) map -> unit
-  iterk: f => m => {for (var i in m) f (k) (m[k])},
+  iterk: f => m => {for (var k in m) f (k) (m[k])},
 
   // ('a -> 'b -> 'a) -> 'a -> ('c, 'b) list -> 'a
 	fold: f => a => m => (L.iter (h => a = f (a) (h)) (M.vals (m)), a),
@@ -421,6 +426,17 @@ var M = {
 			ans[k] = m2[k]
 		}
 		return ans
+	},
+
+	// ('a, 'b) map -> 'a list -> ('a, 'b) map
+	remove: m => l => {
+		var ans = {}
+		for (k in m) {
+			if (! L.contains (k)) {
+				ans [k] = m [k]
+			}
+		}
+		return ans
 	}
 }
 
@@ -446,10 +462,11 @@ var S = {
 	compare: s1 => s2 => s1.localeCompare (s2),
 
 	// string -> regex -> string array
-	match: s => r => s.match (r),
+	match: r => s => s.match (r),
 
 	// string -> regex -> string -> string
-	replace: s1 => r => s2 => s1.replace (r, s2),
+	// regex -> string -> string -> string
+	replace: r => s1 => s2 => s2.replace (r, s1),
 
 	// string -> string -> int
 	rindex: s1 => s2 => s1.lastIndexOf (s2),
