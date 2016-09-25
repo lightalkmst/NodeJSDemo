@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS creds;
 CREATE TABLE creds (
   user VARCHAR(255) UNIQUE,
   pass VARCHAR(255),
-  salt VARCHAR(64),
+  salt VARCHAR(255),
   id INT AUTO_INCREMENT,
   PRIMARY KEY (id)
 );
