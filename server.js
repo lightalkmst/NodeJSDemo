@@ -150,27 +150,29 @@ else {
     var regex = /^.{0,255}$/
     // set user profile
     var handler = (req, res, id) => {
-      req.session.user = req.body.user
+      req.session.user = req.query.user
       write (res) (200, 'plain', JSON.stringify ({success: true}))
     }
     get ('register') ((req, res) => {
-      var user = req.body.user
+      var user = req.query.user
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       if (! S.match (regex) (user)) return fail ('Invalid username')
 
       var hash = crypto.createHash ('sha256')
-      hash.update (req.body.pass.toString ())
-      hash.update (cfg.cred_salt)
-      // delete req.body.pass
+      var salt = 'umaidbro?' + Math.random () + new Date ().getMilliseconds ()
+      hash.update (req.query.pass)
+      hash.update (salt)
+      delete req.query.pass
       mysql.query (`
         INSERT INTO creds
-        SET user = ?, pass = ?
+        SET user = ?, pass = ?, salt = ?
         ;
         SELECT LAST_INSERT_ID ()
         AS id
       `, [
         user,
         hash.digest ('hex'),
+        salt,
       ], (e, data) => {
         ! e
         ? handler (req, res, data[1][0].id)
@@ -191,30 +193,30 @@ else {
   var set_login_handler = (() => {
     // set user profile
     var handler = (req, res, data) => {
-      req.session.user = req.body.user
+      req.session.user = req.query.user
       write (res) (200, 'plain', JSON.stringify ({success: true}))
     }
     get ('login') ((req, res) => {
-      var user = req.body.user
+      var user = req.query.user
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
-      // TODO change from url parameters to json body
-      var hash = crypto.createHash ('sha256')
-      hash.update (req.body.pass.toString ())
-      hash.update (cfg.cred_salt)
-      // delete req.body.pass
       mysql.query (`
         SELECT *
         FROM creds
         WHERE user = ?
-        AND pass = ?
       `, [
         user,
-        hash.digest ('hex'),
       ], (e, data) => {
         ! e
         ?
           data[0]
-          ? handler (req, res, data[0])
+          ? (() => {
+            var hash = crypto.createHash ('sha256')
+            hash.update (req.query.pass)
+            hash.update (data[0].salt)
+            hash.digest ('hex') == data[0].pass
+            ? handler (req, res, data[0])
+            : fail ('The username/password combination does not exist')
+          }) ()
           : fail ('The username/password combination does not exist')
         : (
           log ('Authentication for user: ' + user + ' failed with code: ' + e.code),
