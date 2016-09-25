@@ -5,7 +5,7 @@ sessioning_secret: 'pinkpanther',
 cred: {
   hash: 'sha256',
   private_key: 'umaidbro?',
-}
+},
 
 db: {
   host: 'localhost',
