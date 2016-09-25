@@ -158,11 +158,12 @@ else {
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       if (! S.match (regex) (user)) return fail ('Invalid username')
 
-      var hash = crypto.createHash ('sha256')
+      var hash = crypto.createHash (cfg.cred.hash)
       var salt = crypto.randomBytes (252) + new Date ().getMilliseconds ()
+      hash.update (user)
       hash.update (req.body.pass)
       hash.update (salt)
-      hash.update (cfg.cred_private_key)
+      hash.update (cfg.cred.private_key)
       mysql.query (`
         INSERT INTO creds
         SET user = ?, pass = ?, salt = ?
@@ -210,10 +211,11 @@ else {
         ?
           data[0]
           ? (() => {
-            var hash = crypto.createHash ('sha256')
+            var hash = crypto.createHash (cfg.cred.hash)
+            hash.update (user)
             hash.update (req.body.pass)
             hash.update (data[0].salt)
-            hash.update (cfg.cred_private_key)
+            hash.update (cfg.cred.private_key)
             hash.digest ('hex') == data[0].pass
             ? handler (req, res, data[0])
             : fail ('The username/password combination does not exist')
