@@ -55,7 +55,10 @@ else {
   var http = require ('http')
 
   var express = require ('express')
-  var app = express ()
+  var app = express()
+  var bodyParser = require ('body-parser')
+  app.use (bodyParser.urlencoded ({extended: false}))
+  app.use (bodyParser.json ())
 
   var request = require ('request')
 
@@ -159,7 +162,7 @@ else {
       if (! S.match (regex) (user)) return fail ('Invalid username')
 
       var hash = crypto.createHash (cfg.cred.hash)
-      var salt = crypto.randomBytes (252) + new Date ().getMilliseconds ()
+      var salt = crypto.randomBytes (252).toString ('hex').slice (0, 252) + new Date ().getMilliseconds ()
       hash.update (user)
       hash.update (req.body.pass)
       hash.update (salt)
@@ -218,9 +221,9 @@ else {
             hash.update (cfg.cred.private_key)
             hash.digest ('hex') == data[0].pass
             ? handler (req, res, data[0])
-            : fail ('The username/password combination does not exist')
+            : fail ('The username/password combination does not exist 1')
           }) ()
-          : fail ('The username/password combination does not exist')
+          : fail ('The username/password combination does not exist 2')
         : (
           log ('Authentication for user: ' + user + ' failed with code: ' + e.code),
           fail ('Unknown error')
