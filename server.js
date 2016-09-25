@@ -150,19 +150,19 @@ else {
     var regex = /^.{0,255}$/
     // set user profile
     var handler = (req, res, id) => {
-      req.session.user = req.query.user
+      req.session.user = req.body.user
       write (res) (200, 'plain', JSON.stringify ({success: true}))
     }
     get ('register') ((req, res) => {
-      var user = req.query.user
+      var user = req.body.user
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       if (! S.match (regex) (user)) return fail ('Invalid username')
 
       var hash = crypto.createHash ('sha256')
       var salt = 'umaidbro?' + Math.random () + new Date ().getMilliseconds ()
-      hash.update (req.query.pass)
+      hash.update (req.body.pass)
       hash.update (salt)
-      delete req.query.pass
+      delete req.body.pass
       mysql.query (`
         INSERT INTO creds
         SET user = ?, pass = ?, salt = ?
@@ -193,11 +193,11 @@ else {
   var set_login_handler = (() => {
     // set user profile
     var handler = (req, res, data) => {
-      req.session.user = req.query.user
+      req.session.user = req.body.user
       write (res) (200, 'plain', JSON.stringify ({success: true}))
     }
     get ('login') ((req, res) => {
-      var user = req.query.user
+      var user = req.body.user
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       mysql.query (`
         SELECT *
@@ -211,7 +211,7 @@ else {
           data[0]
           ? (() => {
             var hash = crypto.createHash ('sha256')
-            hash.update (req.query.pass)
+            hash.update (req.body.pass)
             hash.update (data[0].salt)
             hash.digest ('hex') == data[0].pass
             ? handler (req, res, data[0])
