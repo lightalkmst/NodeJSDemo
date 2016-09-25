@@ -146,6 +146,14 @@ else {
   }))
 
   var crypto = require ('crypto')
+  var get_hash = (user, pass, salt) => {
+    var hash = crypto.createHash (cfg.cred.hash)
+    hash.update (user)
+    hash.update (pass)
+    hash.update (salt)
+    hash.update (cfg.cred.key)
+    return hash.digest ('hex')
+  }
 
   // this block subscribes the registration API
   // this function sets the application-specific registration handler
@@ -161,12 +169,7 @@ else {
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       if (! S.match (regex) (user)) return fail ('Invalid username')
 
-      var hash = crypto.createHash (cfg.cred.hash)
       var salt = crypto.randomBytes (252).toString ('hex').slice (0, 252) + new Date ().getMilliseconds ()
-      hash.update (user)
-      hash.update (req.body.pass)
-      hash.update (salt)
-      hash.update (cfg.cred.private_key)
       mysql.query (`
         INSERT INTO creds
         SET user = ?, pass = ?, salt = ?
@@ -175,7 +178,7 @@ else {
         AS id
       `, [
         user,
-        hash.digest ('hex'),
+        get_hash (user, req.body.pass, salt),
         salt,
       ], (e, data) => {
         ! e
@@ -213,17 +216,12 @@ else {
         ! e
         ?
           data[0]
-          ? (() => {
-            var hash = crypto.createHash (cfg.cred.hash)
-            hash.update (user)
-            hash.update (req.body.pass)
-            hash.update (data[0].salt)
-            hash.update (cfg.cred.private_key)
-            hash.digest ('hex') == data[0].pass
+          ? (
+            get_hash (user, req.body.pass, data[0].salt) == data[0].pass
             ? handler (req, res, data[0])
-            : fail ('The username/password combination does not exist 1')
-          }) ()
-          : fail ('The username/password combination does not exist 2')
+            : fail ('The username/password combination does not exist')
+          )
+          : fail ('The username/password combination does not exist')
         : (
           log ('Authentication for user: ' + user + ' failed with code: ' + e.code),
           fail ('Unknown error')

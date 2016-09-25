@@ -3,8 +3,8 @@ prod: false,
 sessioning_secret: 'pinkpanther',
 
 cred: {
-  hash: 'sha256',
-  private_key: 'umaidbro?',
+  hash: 'sha512',
+  key: 'umaidbro?',
 },
 
 db: {
