@@ -485,4 +485,7 @@ var S = {
 
 	// string -> string
 	trim: s => s.trim (),
+
+	// string -> string -> string
+	wrap: s1 => s2 => s3 => s1 + s3 + s2,
 }

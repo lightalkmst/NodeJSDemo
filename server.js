@@ -1,3 +1,119 @@
+/*
+SUPPORTED FUNCTIONALITY (in order of implementation)
+
+Functional programming library and library additions in /common
+Logging
+Clustering
+MySQL connection pool and querying
+Minification management for dev/prod environments
+REST API subscription
+User authentication and security with salt and pepper
+Secured REST API subscription
+Execution of code in /backend
+JavaScript bundling
+File serving
+Config serving
+Favicon serving
+Root address redirection
+Page Not Found handling
+
+Bundled modules:
+  fs (imported)
+    file system operations
+  F
+    curried utility functions
+  L
+    curried array utility functions
+  M
+    curried object utility functions
+  S
+    curried string utility functions
+  cluster (imported)
+    process clustering
+  http (imported)
+    outbound http requests
+  express/app/bodyParser (imported)
+    REST API subscription
+  request (imported)
+    outbound http requests
+  mysql (imported)
+    MySQL connection pool and querying
+  helmet (imported)
+    security
+  sessions (imported)
+    client-side sessions
+  crypto (imported)
+    cryptography functions
+
+Bundled functions/variables:
+  cfg: map
+    config object as defined in /properties.js
+  eval_dir: string -> void
+    calls eval on each file in the given directory
+  get_logger: string -> string -> void
+    prints to stdout the given filename and given message with the process id of the executing process
+    intended use is to generate a file-specific logger by providing the first parameter to generate
+  log: string -> void
+    intended to be shadowed on a file basis by partial application of get_logger
+  min_for_prod: string -> string
+    adds or removes '.min' from the input string to conform to the environment designated by cfg.prod
+  is_min: string -> bool
+    checks if the input contains '.min'
+  is_for_env: string -> bool
+    specifies if the input string contains '.min' in conformance to the environment designated by cfg.prod
+  get_header: string -> map
+    returns the html headers expected for the given type
+  write: ExpressJS.response -> (int * string * string)
+    renders the given status code and message body to the client
+  rest: (string * ((ExpressJS.request, ExpressJS.response) -> void)) ->
+      string -> ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    wrapper for ExpressJS subscribers
+    not intended for external use
+  get: string -> ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    subscribes GET handler for path
+  post: string -> ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    subscribes POST handler for path
+  put: string -> ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    subscribes PUT handler for path
+  del: string -> ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    subscribes DELETE handler for path
+  all: string -> ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    subscribes handler for path for all types
+  get_hash: string -> string -> string -> string
+    returns the hash of the input
+  set_register_handler: ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    uses the given handler on successful registration requests
+  set_user_regex: regex -> void
+    sets the username filter to the input regex
+  set_login_handler: ((ExpressJS.request, ExpressJS.response) -> void) -> void
+    uses the given handler on successful login requests
+  set_logout_handler:((ExpressJS.request, ExpressJS.response) -> void) -> void
+    uses the given handler on successful logout requests
+  sec_get: string -> ((ExpressJS.request, ExpressJS.response) -> void) ->
+      ((ExpressJS.request, ExpressJS.response) -> bool) -> void
+    subscribes secured GET handler for path using the given predicate
+  sec_post: string -> ((ExpressJS.request, ExpressJS.response) -> void) ->
+      ((ExpressJS.request, ExpressJS.response) -> bool) -> void
+    subscribes secured POST handler for path using the given predicate
+  sec_put: string -> ((ExpressJS.request, ExpressJS.response) -> void) ->
+      ((ExpressJS.request, ExpressJS.response) -> bool) -> void
+    subscribes secured PUT handler for path using the given predicate
+  sec_del: string -> ((ExpressJS.request, ExpressJS.response) -> void) ->
+      ((ExpressJS.request, ExpressJS.response) -> bool) -> void
+    subscribes secured DELETE handler for path using the given predicate
+  sec_all: string -> ((ExpressJS.request, ExpressJS.response) -> void) ->
+      ((ExpressJS.request, ExpressJS.response) -> bool) -> void
+    subscribes secured handler for path for all types using the given predicate
+  does_not_exit: ((ExpressJS.request, ExpressJS.response) -> void)
+    renders 404.html to the client and logs the attempt
+
+Bundled REST API:
+  POST /register {user: string, pass: string}
+  POST /login {user: string, pass: string}
+  GET /logout
+
+*/
+
 ////////////////
 //            //
 // INITIALIZE //
@@ -29,11 +145,13 @@ var eval_dir = h =>
 /////////////
 var cluster = require ('cluster')
 
-var log = x =>
+var get_logger = file => x =>
   console.log (
-    'main (' + (cluster.worker || {id: 'm'}).id + '): '
+    file + ' (' + (cluster.worker || {id: 'm'}).id + '): '
     + (typeof x == 'object' ? JSON.stringify (x) : x)
   )
+
+var log = get_logger ('server.js')
 
 if (cluster.isMaster) {
   var cpuCount = require ('os').cpus ().length
@@ -55,7 +173,7 @@ else {
   var http = require ('http')
 
   var express = require ('express')
-  var app = express()
+  var app = express ()
   var bodyParser = require ('body-parser')
   app.use (bodyParser.urlencoded ({extended: false}))
   app.use (bodyParser.json ())
@@ -233,8 +351,8 @@ else {
 
   // this block subscribes the logout API
   // this function sets the application-specific logout handler
-  var logout = (() => {
-    var handler = (req, res) => write (res) (200, 'plain', 'true') // set user profile
+  var set_logout_handler = (() => {
+    var handler = (req, res) => write (res) (200, 'plain', 'true') // remove user profile
     get ('logout') ((req, res) => {
       delete req.session.user
       handler (req, res)
