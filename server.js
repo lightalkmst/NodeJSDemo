@@ -153,7 +153,7 @@ else {
       req.session.user = req.body.user
       write (res) (200, 'plain', JSON.stringify ({success: true}))
     }
-    get ('register') ((req, res) => {
+    post ('register') ((req, res) => {
       var user = req.body.user
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       if (! S.match (regex) (user)) return fail ('Invalid username')
@@ -197,7 +197,7 @@ else {
       req.session.user = req.body.user
       write (res) (200, 'plain', JSON.stringify ({success: true}))
     }
-    get ('login') ((req, res) => {
+    post ('login') ((req, res) => {
       var user = req.body.user
       var fail = s => write (res) (200, 'plain', JSON.stringify ({success: false, reason: s}))
       mysql.query (`
@@ -234,7 +234,7 @@ else {
   // this function sets the application-specific logout handler
   var logout = (() => {
     var handler = (req, res) => write (res) (200, 'plain', 'true') // set user profile
-    get ('login') ((req, res) => {
+    get ('logout') ((req, res) => {
       delete req.session.user
       handler (req, res)
     })
