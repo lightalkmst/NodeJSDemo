@@ -162,7 +162,6 @@ else {
       var salt = 'umaidbro?' + Math.random () + new Date ().getMilliseconds ()
       hash.update (req.body.pass)
       hash.update (salt)
-      delete req.body.pass
       mysql.query (`
         INSERT INTO creds
         SET user = ?, pass = ?, salt = ?
