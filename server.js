@@ -309,28 +309,26 @@ else {
       ], (e, data) => {
         ! e && ! data[0]
         ? (
-          bcrypt.genSalt (cfg.cred.rounds, (e, salt) => {
-            bcrypt.hash (user + req.body.pass + cfg.cred.key, salt, (e, hash) => {
-              mysql.query (`
-                INSERT INTO creds
-                SET user = ?, pass = ?
-                ;
-                SELECT LAST_INSERT_ID ()
-                AS id
-              `, [
-                user,
-                hash,
-              ], (e, data) => {
-                ! e
-                ? handler (req, res, data[1][0].id)
-                :
-                  e.code == 'ER_DUP_ENTRY'
-                  ? fail ('Username is already in use')
-                  : (
-                    log ('Registration for user: ' + user + ' failed with code: ' + e.code),
-                    fail ('Unknown error')
-                  )
-              })
+          bcrypt.hash (user + req.body.pass + cfg.cred.key, cfg.cred.rounds, (e, hash) => {
+            mysql.query (`
+              INSERT INTO creds
+              SET user = ?, pass = ?
+              ;
+              SELECT LAST_INSERT_ID ()
+              AS id
+            `, [
+              user,
+              hash,
+            ], (e, data) => {
+              ! e
+              ? handler (req, res, data[1][0].id)
+              :
+                e.code == 'ER_DUP_ENTRY'
+                ? fail ('Username is already in use')
+                : (
+                  log ('Registration for user: ' + user + ' failed with code: ' + e.code),
+                  fail ('Unknown error')
+                )
             })
           })
         )
