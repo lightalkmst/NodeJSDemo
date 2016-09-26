@@ -13,8 +13,7 @@ USE mydb;
 DROP TABLE IF EXISTS creds;
 CREATE TABLE creds (
   user VARCHAR(255) UNIQUE,
-  pass VARCHAR(255),
-  salt VARCHAR(255),
+  pass VARCHAR(60),
   id INT AUTO_INCREMENT,
   PRIMARY KEY (id)
 );
@@ -24,4 +23,4 @@ CREATE TABLE perms (
   user BOOL,
   id INT,
   PRIMARY KEY (id)
-)
+);

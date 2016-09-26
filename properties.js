@@ -3,7 +3,7 @@ prod: false,
 sessioning_secret: 'pinkpanther',
 
 cred: {
-  hash: 'sha512',
+  rounds: 10,
   key: 'umaidbro?',
 },
 

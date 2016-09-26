@@ -9,6 +9,7 @@
     "helmet": "^2.1.2",
     "client-sessions": "^0.7.0",
     "body-parser": "^1.15.2",
+    "bcryptjs": "^2.3.0",
 
     "mysql": "^2.11.1",
 
