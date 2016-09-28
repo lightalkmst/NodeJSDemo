@@ -17,7 +17,7 @@
 
   <body>
     <!-- display the application -->
-    <app></app>
+    <div id="app"></div>
 
     <!-- load my fp library -->
     <script src="common.js"></script>
@@ -25,25 +25,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="styles.css">
 
-    <script src="node_modules/jquery/dist/jquery.js"></script>
-
-    <!-- load angular 2 -->
-    <!-- todo: IE required polyfill, figure out when can be removed -->
-    <script src="node_modules/core-js/client/shim.min.js"></script>
-
-    <script src="node_modules/zone.js/dist/zone.js"></script>
-    <script src="node_modules/reflect-metadata/Reflect.js"></script>
-    <script src="node_modules/rxjs/bundles/Rx.umd.js"></script>
-
-    <script src="node_modules/@angular/core/bundles/core.umd.js"></script>
-    <script src="node_modules/@angular/common/bundles/common.umd.js"></script>
-    <script src="node_modules/@angular/compiler/bundles/compiler.umd.js"></script>
-    <script src="node_modules/@angular/platform-browser/bundles/platform-browser.umd.js"></script>
-    <script src="node_modules/@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js"></script>
-    <script src="node_modules/@angular/http/bundles/http.umd.js"></script>
-    <script src="node_modules/@angular/router/bundles/router.umd.js"></script>
+    <script src="node_modules/xstream/dist/xstream.js"></script>
+    <script src="node_modules/@cycle/xstream-run/dist/cycle.js"></script>
+    <script src="node_modules/@cycle/dom/dist/cycle-dom.js"></script>
 
     <!-- load app -->
+    <script type="text/javascript">
+      const xs = xstream.default
+      const {
+        makeDOMDriver,
+        a,        abbr,     address,  area,
+        article,  aside,    audio,    b,
+        base,     bdi,      bdo,      blockquote,
+        body,     br,       button,   canvas,
+        caption,  cite,     code,     col,
+        colgroup, dd,       del,      dfn,
+        dir,      div,      dl,       dt,
+        em,       embed,    fieldset, figcaption,
+        figure,   footer,   form,     head,
+        header,   hgroup,   hr,       html,
+        i,        iframe,   img,      input,
+        ins,      kbd,      keygen,   label,
+        legend,   li,       link,     map,
+        mark,     menu,     meta,     nav,
+        noscript, object,   ol,       optgroup,
+        option,   p,        param,    pre,
+        progress, q,        rp,       rt,
+        ruby,     s,        samp,     script,
+        section,  select,   small,    source,
+        span,     strong,   style,    sub,
+        sup,      table,    tbody,    td,
+        textarea, tfoot,    th,       thead,
+        title,    tr,       u,        ul,
+        video,
+      } = CycleDOM
+    </script>
     <script src="app.js"></script>
+    <script type="text/javascript">
+      Cycle.run (main, {
+        DOM: makeDOMDriver ('#app')
+      })
+    </script>
   </body>
 </html>
