@@ -16,20 +16,20 @@
   </head>
 
   <body>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+
     <!-- display the application -->
     <div id="app"></div>
 
     <!-- load my fp library -->
     <script src="common.js"></script>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="styles.css">
-
+    <!-- load cyclejs -->
     <script src="node_modules/xstream/dist/xstream.js"></script>
     <script src="node_modules/@cycle/xstream-run/dist/cycle.js"></script>
     <script src="node_modules/@cycle/dom/dist/cycle-dom.js"></script>
 
-    <!-- load app -->
     <script type="text/javascript">
       const xs = xstream.default
       const {
@@ -59,8 +59,20 @@
         title,    tr,       u,        ul,
         video,
       } = CycleDOM
+      let cfg = (() => {
+        var request = new XMLHttpRequest ()
+        request.open ('GET', '/cfg', false)
+        request.send (null)
+        return eval ('(' + request.responseText + ')')
+      }) ()
+      var get_logger = x => ! cfg.prod ? y => console.log (x + ': ' + y) : _ => {}
+      // set window title
+      window.document.title = cfg.title
     </script>
+
+    <!-- load app -->
     <script src="app.js"></script>
+
     <script type="text/javascript">
       Cycle.run (main, {
         DOM: makeDOMDriver ('#app')

@@ -562,7 +562,7 @@ else {
     (cfg.prod ? cached : uncached) ()
   }) ([
     ['common.js', 'common/', ['fp_lib.js'], []],
-    ['app.js', 'frontend/js/', ['app.js'], []],
+    ['app.js', 'frontend/js/', [], ['app.js']],
   ])
 
   // serve all other requested files
