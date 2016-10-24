@@ -227,7 +227,7 @@ var L = {
   // (int -> 'a -> 'b) -> 'a list -> 'b list
   mapi: f => l => {
   	var ans = []
-    L.iteri (i => h => ans.push (f (i) (h)))
+    L.iteri (i => h => ans.push (f (i) (h))) (l)
     return ans
   },
 
