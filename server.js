@@ -239,6 +239,7 @@ else {
       plain: 'plain',
     } [x],
     'Expires': new Date ().toUTCString (),
+    'Cache-Control': 'no-store',
   })
 
   var write = res => (...r) => {
@@ -538,21 +539,30 @@ else {
     var dir = h[1]
     var first = L.map (min_for_prod) (h[2])
     var last = L.map (min_for_prod) (h[3])
-    var js = ''
-    fs.readdir (dir, (e, data) =>
-      js = F.p (data) (
-        L.filter (is_for_env)
-        >> L.filter (h => L.forall (F['!='] (h)) (first))
-        >> L.filter (h => L.forall (F['!='] (h)) (last))
-        >> (l => [... first, ... l, ... last])
-        >> L.map (h => fs.readFileSync (dir + h, 'utf8'))
-        >> L.reduce (a => h => a + ';' + h)
-      )
+    var coalesce = F.c () (
+      L.filter (is_for_env)
+      >> L.filter (h => L.forall (F['!='] (h)) (first))
+      >> L.filter (h => L.forall (F['!='] (h)) (last))
+      >> (l => [... first, ... l, ... last])
+      >> L.map (h => fs.readFileSync (dir + h, 'utf8'))
+      >> L.reduce (a => h => a + ';' + h)
     )
-    get (name) ((req, res) => write (res) (200, 'js', js))
+    var cached = () => {
+      var js = ''
+      fs.readdir (dir, (e, data) => js = coalesce (data))
+      get (name) ((req, res) => write (res) (200, 'js', js))
+    }
+    var uncached = () => {
+      get (name) ((req, res) =>
+        fs.readdir (dir, (e, data) =>
+          write (res) (200, 'js', coalesce (data))
+        )
+      )
+    }
+    (cfg.prod ? cached : uncached) ()
   }) ([
     ['common.js', 'common/', ['fp_lib.js'], []],
-    ['app.js', 'frontend/js/', ['app.js'], []],
+    ['app.js', 'frontend/js/', [], ['app.js']],
   ])
 
   // serve all other requested files
