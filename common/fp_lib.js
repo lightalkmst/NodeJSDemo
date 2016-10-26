@@ -387,7 +387,7 @@ var M = {
   // ('a -> 'b) -> ('c, 'a) map -> ('c, 'b) map
 	map: f => m => {
   	var ans = {}
-  	M.iterk (k => v => ans[k] = f (m[v])) (m)
+  	M.iterk (k => v => ans[k] = f (v)) (m)
     return ans
   },
 
